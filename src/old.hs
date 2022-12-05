@@ -1,6 +1,4 @@
-{-# LANGUAGE InstanceSigs #-}
-
-module Amortization where
+module Main where
 import Data.Fixed (E6, Fixed, Centi)
 
 data Periodicity = Month | Day | Year 
@@ -34,31 +32,6 @@ simple = Amortization {
     amInterestPeriodicity = Month
 }
 
--- '-------------------------------------------------------------
--- '
--- '  Name                      : FV
--- '  Purpose                   : It is computed as -
-
--- '                                                   (1+rate)^nper - 1
--- '       fv = -pv*(1+rate)^nper - PMT*(1+rate*type)* -----------------
--- '                                                         rate
--- '
--- '       fv = -pv - PMT * nper        : if rate == 0
--- '
--- '
--- '  Returns                   : Double
--- '
--- '-------------------------------------------------------------
--- futureValue :: Double -> Double -> Double -> Int -> Int -> Double
--- futureValue pv pmt rate period due
---     | rate == 0 = - pv - pmt * fromIntegral period
---     | otherwise = ((-pv) * dTemp2) - ((pmt / rate) * dTemp * (dTemp2 - 1))
---         where        
---             dTemp = 1 + rate * fromIntegral due
---             dTemp2 = dTemp3 ^ period
---             dTemp3 = 1 + rate     
--- '-------------------------------------------------------------
--- second try 
 -- FV = PV(1+ r)^n
 futureValue :: Double -> Double -> Int -> Double
 futureValue pv r n = pv * ((1 + r)^n)
@@ -102,37 +75,15 @@ futureValueOfPeriodicPaymentsDueAtBeginOfPeriods pv pmt r n k =
 
 -- '
 -- '  Name                      : PMT
--- '  Purpose                   :
--- '               This function, together with the four following
--- '               it (Pv, Fv, NPer and Rate), can calculate
--- '               a certain value associated with a regular series of
--- '               equal-sized payments.  This series can be fully described
--- '               by these values:
--- '                     Pv   - present value
--- '                     Fv   - future value (at end of series)
--- '                     PMT  - the regular payment
--- '                     nPer - the number of 'periods' over which the
--- '                            money is paid
--- '                     Rate - the interest rate per period.
--- '                            (type - payments at beginning (1) or end (0) of
--- '                            the period).
--- '               Each function can determine one of the values, given the others.
--- '
--- '               General Function for the above values:
--- '
--- '                                                      (1+rate)^nper - 1
--- '               pv * (1+rate)^nper + PMT*(1+rate*type)*----------------- + fv  = 0
--- '                                                            rate
--- '               rate == 0  ->  pv + PMT*nper + fv = 0
--- '
--- '               Thus:
 -- '                     (-fv - pv*(1+rate)^nper) * rate
 -- '               PMT = -------------------------------------
--- '                     (1+rate*type) * ( (1+rate)^nper - 1 )
--- '
--- '               PMT = (-fv - pv) / nper    : if rate == 0
+-- '                        ( (1+rate)^nper - 1 )
+paymentForFutureValue :: Double -> Double -> Double -> Integer -> Double
+paymentForFutureValue fv pv r n = (-fv - pv * ci) * r / (ci - 1)
+    where 
+        ci = (1 + r) ^ n
 
-
+-- $> 
 main :: IO ()
 main = do
     print "hello world"
