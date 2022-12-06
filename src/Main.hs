@@ -2,9 +2,11 @@
 {-# HLINT ignore "Use if" #-}
 {-# HLINT ignore "Redundant lambda" #-}
 
-module AmortizationTable
-  ( Frequency(..)
-  , LoanQuery(..)
+module LoanCalculator
+  ( LoanQuery(..)
+  , Frequency(..)
+  , Commission
+  , CommissionType
   , queryLoan
   , asLiquidValueLoan
   , LoanQueryResult
@@ -123,14 +125,14 @@ queryLoan loan =
 
 {- $>
   let query = asLiquidValueLoan LoanQuery { 
-    amQueryAmount = 30000,  
-    amQueryRate = 0.05,  
+    amQueryAmount = 31500,  
+    amQueryRate = 0.047,  
     amQueryTerms = 6, 
-    amQueryFrequency = Daily, 
-    amQueryStartDate = (2022, 12, 30),
-    amQueryAbsInterest = 1,
+    amQueryFrequency = Monthly, 
+    amQueryStartDate = (2022, 02, 28),
+    amQueryAbsInterest = 0,
     amQueryAbsPrincipal = 2,
-    amQueryCommissions = [Commission Absolute 10.0, Commission Percentage 0.5]
+    amQueryCommissions = [Commission Percentage 2.0, Commission Percentage 2.5]
   }  
 <$ -}
 
@@ -187,18 +189,16 @@ generateAmortizationTable loan =
 
     -- Taxes for a given payment
     tax paymentNo = case amortization paymentNo > 0 of
-      True  -> brazilianIofTax paymentNo
+      True  -> brazilianIofTax 0.0038 0.000082 paymentNo
       False -> 0
 
     -- BR IOF calculation dynamics for a given payment (@ToDo: parametrize over the constants)
-    brazilianIofTax paymentNo =
+    brazilianIofTax baseTax dailyTax paymentNo =
       let startDate  = amQueryStartDate loan
           dueDate    = addTerm startDate (amQueryFrequency loan) paymentNo
           am         = amortization paymentNo
           days       = fromIntegral (numberOfDays startDate dueDate)
           cappedDays = min 365 days
-          baseTax    = 0.0038
-          dailyTax   = 0.000082
           noPayments = fromIntegral numberOfPrincipalPayments
       in  ((baseTax * amQueryAmount loan) / noPayments)
             + (dailyTax * cappedDays * am)
@@ -246,19 +246,18 @@ totalCommissionValue loan =
 
 -- Convert a LoanQuery into another where the liquidValue of the later is equal to the amount of the first
 asLiquidValueLoan :: LoanQuery -> LoanQuery
-asLiquidValueLoan loan = let
-  query = findAmountForLiquidAmount loan
-  res = goalSeek query 0.001 (amQueryAmount loan) 250
-  in LoanQuery {
-    amQueryAmount = res,
-    amQueryRate = amQueryRate loan,
-    amQueryTerms = amQueryTerms loan,
-    amQueryFrequency = amQueryFrequency loan,
-    amQueryStartDate = amQueryStartDate loan,
-    amQueryAbsInterest = amQueryAbsInterest loan,
-    amQueryAbsPrincipal = amQueryAbsPrincipal loan,
-    amQueryCommissions = amQueryCommissions loan
-  }
+asLiquidValueLoan loan =
+  let query = findAmountForLiquidAmount loan
+      res   = goalSeek query 0.001 (amQueryAmount loan) 250
+  in  LoanQuery { amQueryAmount       = res
+                , amQueryRate         = amQueryRate loan
+                , amQueryTerms        = amQueryTerms loan
+                , amQueryFrequency    = amQueryFrequency loan
+                , amQueryStartDate    = amQueryStartDate loan
+                , amQueryAbsInterest  = amQueryAbsInterest loan
+                , amQueryAbsPrincipal = amQueryAbsPrincipal loan
+                , amQueryCommissions  = amQueryCommissions loan
+                }
 
 type AccuracyLevel = Double
 type Guess = Double
@@ -266,11 +265,7 @@ type MaxIterations = Int
 
 -- finds a value trough guessing based on func results
 goalSeek
-  :: (Double -> Double)
-  -> AccuracyLevel
-  -> Guess
-  -> MaxIterations
-  -> Double
+  :: (Double -> Double) -> AccuracyLevel -> Guess -> MaxIterations -> Double
 goalSeek func accuracyLevel guess maxIterations =
   let delta     = 0.00001
       newGuess  = guess + delta
@@ -278,26 +273,22 @@ goalSeek func accuracyLevel guess maxIterations =
       result2   = func newGuess
       nextGuess = guess - (result1 * (newGuess - guess) / (result2 - result1))
   in  if abs result1 > accuracyLevel && maxIterations > 0
-        then goalSeek func
-                       accuracyLevel                       
-                       nextGuess
-                       (maxIterations - 1)
+        then goalSeek func accuracyLevel nextGuess (maxIterations - 1)
         else guess
 
 findAmountForLiquidAmount :: LoanQuery -> (Double -> Double)
-findAmountForLiquidAmount loan = \n -> let
-    testLoan = LoanQuery{
-        amQueryAmount = n,
-        amQueryRate = amQueryRate loan,
-        amQueryTerms = amQueryTerms loan,
-        amQueryFrequency = amQueryFrequency loan,
-        amQueryStartDate = amQueryStartDate loan,
-        amQueryAbsInterest = amQueryAbsInterest loan,
-        amQueryAbsPrincipal = amQueryAbsPrincipal loan,
-        amQueryCommissions = amQueryCommissions loan
-    }
-    val = liquidValue testLoan (loanResultTable $ queryLoan testLoan)
-    in amQueryAmount loan - val
+findAmountForLiquidAmount loan = \n ->
+  let testLoan = LoanQuery { amQueryAmount       = n
+                           , amQueryRate         = amQueryRate loan
+                           , amQueryTerms        = amQueryTerms loan
+                           , amQueryFrequency    = amQueryFrequency loan
+                           , amQueryStartDate    = amQueryStartDate loan
+                           , amQueryAbsInterest  = amQueryAbsInterest loan
+                           , amQueryAbsPrincipal = amQueryAbsPrincipal loan
+                           , amQueryCommissions  = amQueryCommissions loan
+                           }
+      val = liquidValue testLoan (loanResultTable $ queryLoan testLoan)
+  in  amQueryAmount loan - val
 
 -- This function adds the given number of periods of certain frequency to the given date and returns the resulting date
 addTerm :: Date -> Frequency -> Int -> Date
@@ -331,23 +322,22 @@ formatCurrency num = "R$ " ++ formatNumber num
 instance Show LoanQueryResult where
   show result =
     let table = show (loanResultTable result)
-    in
-      table
-      ++ "\n "
-      ++ "\n "
-      ++ "\nPrincipal:    "
-      ++ formatCurrency (loanResultPrincipal result)
-      ++ "\nTax:          "
-      ++ formatCurrency (loanResultTax result)
-      ++ "\nComms:        "
-      ++ formatCurrency (loanCommissions result)
-      ++ "\nLiquid:       "
-      ++ formatCurrency (loanResultLiquidValue result)
-      ++ "\nInterest:     "
-      ++ formatCurrency (loanResultInterest result)
-      ++ "\nTotal PMT:    "
-      ++ formatCurrency (loanResultTotal result)
-      ++ "\n"
+    in  table
+          ++ "\n "
+          ++ "\n "
+          ++ "\nPrincipal:    "
+          ++ formatCurrency (loanResultPrincipal result)
+          ++ "\nTax:          "
+          ++ formatCurrency (loanResultTax result)
+          ++ "\nComms:        "
+          ++ formatCurrency (loanCommissions result)
+          ++ "\nLiquid:       "
+          ++ formatCurrency (loanResultLiquidValue result)
+          ++ "\nInterest:     "
+          ++ formatCurrency (loanResultInterest result)
+          ++ "\nTotal PMT:    "
+          ++ formatCurrency (loanResultTotal result)
+          ++ "\n"
 
 
 instance Show AmortizationTable where
