@@ -3,4 +3,5 @@
 :load date boxes 
 :set -package boxes
 :set -package time
-:load ./src/Main.hs
+:load ./src/LoanCalculator.hs
+:load ./app/Main.hs
