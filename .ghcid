@@ -1,1 +1,3 @@
-:load src/Main.hs
+:load date boxes 
+:set -package boxes
+:set -package time

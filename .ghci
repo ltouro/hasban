@@ -1,4 +1,6 @@
 :set -fwarn-unused-binds -fwarn-unused-imports
 :set -isrc
-:load ./src/Main.hs
 :load date boxes 
+:set -package boxes
+:set -package time
+:load ./src/Main.hs

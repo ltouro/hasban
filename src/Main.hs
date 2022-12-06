@@ -1,10 +1,12 @@
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# HLINT ignore "Use if" #-}
+{-# HLINT ignore "Redundant lambda" #-}
 
 module AmortizationTable
-  ( AmortizationOption(..)
-  , QueryLoan(..)
+  ( Frequency(..)
+  , LoanQuery(..)
   , queryLoan
+  , asLiquidValueLoan
   , LoanQueryResult
   ) where
 
@@ -15,17 +17,23 @@ import           Data.Time.Calendar             ( addDays
                                                 , fromGregorian
                                                 , toGregorian
                                                 )
-import           Text.PrettyPrint.Boxes
+import           Text.PrettyPrint.Boxes         ( hsep
+                                                , left
+                                                , render
+                                                , text
+                                                , vsep
+                                                )
 import           Text.Printf                    ( printf )
 
-data QueryLoan = QueryLoan
+data LoanQuery = LoanQuery
   { amQueryAmount       :: Double
   , amQueryRate         :: Double
   , amQueryTerms        :: Int
-  , amQueryFrequency    :: AmortizationOption
+  , amQueryFrequency    :: Frequency
   , amQueryStartDate    :: Date
   , amQueryAbsInterest  :: Int
   , amQueryAbsPrincipal :: Int
+  , amQueryCommissions  :: [Commission]
   }
   deriving Show
 
@@ -38,9 +46,10 @@ data AmortizationTableItem = AmortizationTableItem
   , amTableTotal     :: Double
   , amTableTax       :: Double
   }
-  deriving Show
 
-type AmortizationTable = [AmortizationTableItem]
+newtype AmortizationTable = AmortizationTable
+  { amTable :: [AmortizationTableItem]
+  }
 
 data LoanQueryResult = LoanQueryResult
   { loanResultTable       :: AmortizationTable
@@ -49,9 +58,19 @@ data LoanQueryResult = LoanQueryResult
   , loanResultPrincipal   :: Double
   , loanResultInterest    :: Double
   , loanResultTotal       :: Double
+  , loanCommissions       :: Double
   }
 
-data AmortizationOption =
+data Commission = Commission
+  { commissionType  :: CommissionType
+  , commissionValue :: Double
+  }
+  deriving Show
+
+data CommissionType = Absolute | Percentage deriving Show
+
+
+data Frequency =
   Monthly |
   Biweekly |
   Weekly |
@@ -59,18 +78,6 @@ data AmortizationOption =
   Yearly
   deriving (Enum, Show)
 
-
-type Date = (Integer, Int, Int)
-format :: Date -> String
-format (year, month, day) =
-  show year ++ "-" ++ printf "%02d" month ++ "-" ++ printf "%02d" day
-
-
-formatNumber :: Double -> String
-formatNumber = printf "%10.2f"
-
-formatCurrency :: Double -> String
-formatCurrency num = "R$ " ++ formatNumber num
 
 -- FV = PV(1+ r)^n
 futureValue :: Double -> Double -> Int -> Double
@@ -88,70 +95,113 @@ calculatePayment loanAmount interestRate loanTerm =
         * futureValue interestRate interestRate paymentNo
         / (compositeRate interestRate paymentNo - 1)
 
-queryLoan :: QueryLoan -> LoanQueryResult
+-- Sums the amTableTax of every AmortizationTableItem in table
+sumTax :: AmortizationTable -> Double
+sumTax table = foldr (\p acc -> acc + amTableTax p) 0 (amTable table)
+
+-- Gets the initial remaninig amount and subtract taxes
+liquidValue :: LoanQuery -> AmortizationTable -> Double
+liquidValue loan table =
+  amTableRemaining (head (amTable table))
+    - sumTax table
+    - totalCommissionValue loan
+
+queryLoan :: LoanQuery -> LoanQueryResult
 queryLoan loan =
-  let accum field = foldr (\p acc -> acc + field p) 0
+  let comm = totalCommissionValue loan
+      accum field table = foldr (\p acc -> acc + field p) 0 (amTable table)
       table = generateAmortizationTable loan
-  in  LoanQueryResult { loanResultTable       = table
-                      , loanResultLiquidValue = liquidValue table
-                      , loanResultTax         = accum amTableTax table
-                      , loanResultPrincipal   = accum amTablePrincipal table
-                      , loanResultInterest    = accum amTableInterest table
-                      , loanResultTotal       = accum amTableTotal table
-                      }
+  in  LoanQueryResult
+        { loanResultTable       = table
+        , loanResultLiquidValue = liquidValue loan table
+        , loanResultTax         = accum amTableTax table
+        , loanResultPrincipal   = amTableRemaining (head (amTable table))
+        , loanResultInterest    = accum amTableInterest table
+        , loanResultTotal       = accum amTableTotal table
+        , loanCommissions       = comm
+        }
 
--- This function generates an amortization table, given the loan amount,
--- interest rate, paymentFrequency, and loan term (in AmortizationOption)
-generateAmortizationTable :: QueryLoan -> AmortizationTable
-generateAmortizationTable loan = -- generateAmortizationTable (amQueryAmount loan) (amQueryRate loan) (amQueryTerms loan) (amQueryFrequency loan) (amQueryStartDate loan)
+{- $>
+  let query = asLiquidValueLoan LoanQuery { 
+    amQueryAmount = 30000,  
+    amQueryRate = 0.05,  
+    amQueryTerms = 6, 
+    amQueryFrequency = Daily, 
+    amQueryStartDate = (2022, 12, 30),
+    amQueryAbsInterest = 1,
+    amQueryAbsPrincipal = 2,
+    amQueryCommissions = [Commission Absolute 10.0, Commission Percentage 0.5]
+  }  
+<$ -}
+
+-- $> putStr (show (queryLoan query)) 
+
+-- This function generates an amortization table, given a LoanQuery
+generateAmortizationTable :: LoanQuery -> AmortizationTable
+generateAmortizationTable loan =
   let
-    periodicPaymentWithAbs paymentNo =
-      case paymentNo > amQueryAbsPrincipal loan of
-        True  -> periodicPayment
-        False -> case paymentNo > amQueryAbsInterest loan of
-          True  -> currentBalance paymentNo * amQueryRate loan
-          False -> 0
-
-    periodicPayment = calculatePayment
-      (startValue loan)
-      (amQueryRate loan)
-      (amQueryTerms loan - amQueryAbsPrincipal loan)
-
-    -- This function calculates the remaining balance on a loan, given
-    -- the loan amount, interest rate, and number of payments made
-    remainingBalance paymentNo =
-      startValue loan
-        * (1 + amQueryRate loan)
-        ^ paymentNo
-        - periodicPaymentWithAbs paymentNo
-        * ((1 + amQueryRate loan) ^ paymentNo - 1)
-        / amQueryRate loan
-
-    currentBalance paymentNo = remainingBalance (paymentNo - 1)
-
-    startValue loan = futureValue (amQueryAmount loan)
-                                  (amQueryRate loan)
-                                  (amQueryAbsInterest loan)
-
-    amortization paymentNo =
-      periodicPaymentWithAbs paymentNo
-        - (currentBalance paymentNo * amQueryRate loan)
-
-    taxOnAmortization startDate paymentFrequency paymentNo =
-      case amortization paymentNo > 0 of
-        True  -> tax startDate paymentFrequency paymentNo
+    -- This functions gets the payment for a given payment number in the schedule
+    -- It allows three states for amortization: 
+    --  absolving principal with and interest table: amQueryAbsInterest, amQueryAbsPrincipal
+    --  absolving principal table: amQueryAbsPrincipal
+    --  PRICE
+    -- amQueryAbsPrincipal must be > than amQueryAbsInterest
+    pmt paymentNo = case paymentNo > amQueryAbsPrincipal loan of
+      -- There is a payment of principal and interest
+      True ->
+        calculatePayment startValue (amQueryRate loan) numberOfPrincipalPayments
+      False -> case paymentNo > amQueryAbsInterest loan of
+        -- There is a payment of interest
+        True  -> currentInterest paymentNo
+        -- There is no payment
         False -> 0
 
-    tax startDate paymentFrequency paymentNo =
-      let days = fromIntegral
-            ( numberOfDays startDate
-            $ addTerm startDate paymentFrequency paymentNo
-            )
+    numberOfPrincipalPayments = amQueryTerms loan - amQueryAbsPrincipal loan
+
+    -- The interest for given paymentNo
+    currentInterest paymentNo = currentBalance paymentNo * amQueryRate loan
+
+    -- The amount left to pay in the start of a given period of time
+    currentBalance paymentNo = remainingBalance (paymentNo - 1)
+
+    -- The amount left to debitor pay after the payment is performed
+    -- if no payment, the remainingBalane should be > currentBalance
+    remainingBalance paymentNo = case paymentNo of
+      -- The debit starting point is the amount borrowed
+      0 -> amQueryAmount loan
+      _ -> case paymentNo < amQueryAbsInterest loan of
+        -- No payment was performed yet, calculates the future value of the debit to the given paymentNo
+        True -> futureValue (amQueryAmount loan) (amQueryRate loan) paymentNo
+        -- Calculate the balance considering previous payments and current payment
+        -- Get last balance, add the interest, subtract the payment
+        False ->
+          currentBalance paymentNo + currentInterest paymentNo - pmt paymentNo
+
+    -- The value when is due the first payment of principal
+    startValue = futureValue (amQueryAmount loan)
+                             (amQueryRate loan)
+                             (amQueryAbsInterest loan)
+
+    -- The amount that was subtracted from the principal after this paymentNo (can be negative)
+    amortization paymentNo = pmt paymentNo - currentInterest paymentNo
+
+    -- Taxes for a given payment
+    tax paymentNo = case amortization paymentNo > 0 of
+      True  -> brazilianIofTax paymentNo
+      False -> 0
+
+    -- BR IOF calculation dynamics for a given payment (@ToDo: parametrize over the constants)
+    brazilianIofTax paymentNo =
+      let startDate  = amQueryStartDate loan
+          dueDate    = addTerm startDate (amQueryFrequency loan) paymentNo
+          am         = amortization paymentNo
+          days       = fromIntegral (numberOfDays startDate dueDate)
           cappedDays = min 365 days
           baseTax    = 0.0038
           dailyTax   = 0.000082
-      in  (baseTax * amortization paymentNo)
-            + (dailyTax * cappedDays * amortization paymentNo)
+          noPayments = fromIntegral numberOfPrincipalPayments
+      in  ((baseTax * amQueryAmount loan) / noPayments)
+            + (dailyTax * cappedDays * am)
 
     initial = AmortizationTableItem { amTableDate      = amQueryStartDate loan
                                     , amTablePaymentNo = 0
@@ -167,105 +217,99 @@ generateAmortizationTable loan = -- generateAmortizationTable (amQueryAmount loa
                                    (amQueryFrequency loan)
                                    paymentNo
       , amTablePaymentNo = paymentNo
-      , amTableInterest  = currentBalance paymentNo * amQueryRate loan
-      , amTablePrincipal = periodicPaymentWithAbs paymentNo
-                             - (currentBalance paymentNo * amQueryRate loan)
+      , amTableInterest  = currentInterest paymentNo
+      , amTablePrincipal = max (amortization paymentNo) 0
       , amTableRemaining = remainingBalance paymentNo
-      , amTableTotal     = periodicPaymentWithAbs paymentNo
-      , amTableTax       = taxOnAmortization (amQueryStartDate loan)
-                                             (amQueryFrequency loan)
-                                             paymentNo
+      , amTableTotal     = pmt paymentNo
+      , amTableTax       = tax paymentNo
       }
   in
-    -- Generate a AmortizationTableItem for each payment
-    ( initial
-    : [ itemForPaymentNo paymentNo | paymentNo <- [1 .. amQueryTerms loan] ]
-    )
+    AmortizationTable
+      { amTable = initial
+                    : [ itemForPaymentNo paymentNo
+                      | paymentNo <- [1 .. amQueryTerms loan]
+                      ]
+      }
 
-instance Show LoanQueryResult where
-  show result =
-    let table = prettyPrintAmortizationTable (loanResultTable result)
-    in  table
-          ++ "\n "
-          ++ "\nTotais"
-          ++ "\n "
-          ++ "\nLiquid:       "
-          ++ formatCurrency (loanResultLiquidValue result)
-          ++ "\nTax:          "
-          ++ formatCurrency (loanResultTax result)
-          ++ "\nPrincipal:    "
-          ++ formatCurrency (loanResultPrincipal result)
-          ++ "\nInterest:     "
-          ++ formatCurrency (loanResultInterest result)
-          ++ "\nTotal PMT:    "
-          ++ formatCurrency (loanResultTotal result)
-          ++ "\n"
+-- Calculate the total value of the given list of commissions
+totalCommissionValue :: LoanQuery -> Double
+totalCommissionValue loan =
+  let commissions = amQueryCommissions loan
+      absoluteValue (Commission Absolute   value) = value
+      absoluteValue (Commission Percentage _    ) = 0.0
+      percentageValue (Commission Absolute   _    ) = 0.0
+      percentageValue (Commission Percentage value) = value
+      absTotal  = sum $ map absoluteValue commissions
+      percTotal = sum $ map percentageValue commissions
+  in  absTotal + ((percTotal / 100) * amQueryAmount loan)
 
--- This function takes a AmortizationTable and formats it in a more readable way
-prettyPrintAmortizationTable :: AmortizationTable -> String
-prettyPrintAmortizationTable amortizationTable =
-  let --      
 
-      -- This function generates a string for a single row in the amortization table
-      -- given the values for that row
-    generateRow (AmortizationTableItem date payment interest principal remaining total tax)
-      = let paymentStr   = printf "%3d" payment
-            dateStr      = format date
-            interestStr  = formatCurrency interest
-            principalStr = formatCurrency principal
-            remainingStr = formatCurrency remaining
-            totalStr     = formatCurrency total
-            taxStr       = formatCurrency tax
-        in  hsep
-              2
-              left
-              [ text paymentStr
-              , text dateStr
-              , text interestStr
-              , text principalStr
-              , text remainingStr
-              , text totalStr
-              , text taxStr
-              ]
+-- Convert a LoanQuery into another where the liquidValue of the later is equal to the amount of the first
+asLiquidValueLoan :: LoanQuery -> LoanQuery
+asLiquidValueLoan loan = let
+  query = findAmountForLiquidAmount loan
+  res = goalSeek query 0.001 (amQueryAmount loan) 250
+  in LoanQuery {
+    amQueryAmount = res,
+    amQueryRate = amQueryRate loan,
+    amQueryTerms = amQueryTerms loan,
+    amQueryFrequency = amQueryFrequency loan,
+    amQueryStartDate = amQueryStartDate loan,
+    amQueryAbsInterest = amQueryAbsInterest loan,
+    amQueryAbsPrincipal = amQueryAbsPrincipal loan,
+    amQueryCommissions = amQueryCommissions loan
+  }
 
-    -- Generate the rows for the amortization table
-    rows   = map generateRow amortizationTable
+type AccuracyLevel = Double
+type Guess = Double
+type MaxIterations = Int
 
-    -- Generate the header row for the amortization table
-    header = hsep
-      2
-      left
-      [ text "#  "
-      , text "Date      "
-      , text "Interest     "
-      , text "Principal    "
-      , text "Remaining    "
-      , text "Payment      "
-      , text "Tax          "
-      ]
+-- finds a value trough guessing based on func results
+goalSeek
+  :: (Double -> Double)
+  -> AccuracyLevel
+  -> Guess
+  -> MaxIterations
+  -> Double
+goalSeek func accuracyLevel guess maxIterations =
+  let delta     = 0.00001
+      newGuess  = guess + delta
+      result1   = func guess
+      result2   = func newGuess
+      nextGuess = guess - (result1 * (newGuess - guess) / (result2 - result1))
+  in  if abs result1 > accuracyLevel && maxIterations > 0
+        then goalSeek func
+                       accuracyLevel                       
+                       nextGuess
+                       (maxIterations - 1)
+        else guess
 
-    -- Generate the table
-    table = vsep 0 left (header : rows)
-  in
-    -- Render the table as a string
-    render table
+findAmountForLiquidAmount :: LoanQuery -> (Double -> Double)
+findAmountForLiquidAmount loan = \n -> let
+    testLoan = LoanQuery{
+        amQueryAmount = n,
+        amQueryRate = amQueryRate loan,
+        amQueryTerms = amQueryTerms loan,
+        amQueryFrequency = amQueryFrequency loan,
+        amQueryStartDate = amQueryStartDate loan,
+        amQueryAbsInterest = amQueryAbsInterest loan,
+        amQueryAbsPrincipal = amQueryAbsPrincipal loan,
+        amQueryCommissions = amQueryCommissions loan
+    }
+    val = liquidValue testLoan (loanResultTable $ queryLoan testLoan)
+    in amQueryAmount loan - val
 
 -- This function adds the given number of periods of certain frequency to the given date and returns the resulting date
-addTerm :: Date -> AmortizationOption -> Int -> Date
+addTerm :: Date -> Frequency -> Int -> Date
 addTerm (year, month, day) paymentFrequency numPeriods =
-  let gregorianDate = fromGregorian year month day
-      numDays       = fromIntegral $ case paymentFrequency of
-        Monthly  -> numPeriods
-        Biweekly -> numPeriods * 14
-        Weekly   -> numPeriods * 7
-        Daily    -> numPeriods
-        Yearly   -> numPeriods
-      newDate = case paymentFrequency of
-        Monthly -> addGregorianMonthsClip numDays gregorianDate
-        Yearly  -> addGregorianYearsClip numDays gregorianDate
-        _       -> addDays numDays gregorianDate
-      (newYear, newMonth, newDay) = toGregorian newDate
-  in  (fromIntegral newYear, newMonth, newDay)
+  let current = fromGregorian year month day
+      next    = case paymentFrequency of
+        Monthly  -> addGregorianMonthsClip (fromIntegral numPeriods) current
+        Yearly   -> addGregorianYearsClip (fromIntegral numPeriods) current
+        Biweekly -> addDays (fromIntegral numPeriods * 14) current
+        Weekly   -> addDays (fromIntegral numPeriods * 7) current
+        Daily    -> addDays (fromIntegral numPeriods) current
+  in  toGregorian next
 
 numberOfDays :: Date -> Date -> Integer
 numberOfDays (year1, month1, day1) (year2, month2, day2) =
@@ -273,24 +317,80 @@ numberOfDays (year1, month1, day1) (year2, month2, day2) =
       date2 = fromGregorian year2 month2 day2
   in  diffDays date2 date1
 
--- Sums the amTableTax of every AmortizationTableItem in table
-sumTax :: AmortizationTable -> Double
-sumTax = foldr (\p acc -> acc + amTableTax p) 0
+type Date = (Integer, Int, Int)
+formatDate :: Date -> String
+formatDate (year, month, day) =
+  show year ++ "-" ++ printf "%02d" month ++ "-" ++ printf "%02d" day
 
-liquidValue :: AmortizationTable -> Double
-liquidValue table = amTableRemaining (head table) - sumTax table
+formatNumber :: Double -> String
+formatNumber = printf "%10.2f"
 
-{- $>
-  let query = QueryLoan { 
-    amQueryAmount = 30000,  
-    amQueryRate = 0.05,  
-    amQueryTerms = 34, 
-    amQueryFrequency = Monthly, 
-    amQueryStartDate = (2022, 12, 30),
-    amQueryAbsInterest = 1,
-    amQueryAbsPrincipal = 2 }
-<$ -}
+formatCurrency :: Double -> String
+formatCurrency num = "R$ " ++ formatNumber num
 
--- $> let table = generateAmortizationTable query
+instance Show LoanQueryResult where
+  show result =
+    let table = show (loanResultTable result)
+    in
+      table
+      ++ "\n "
+      ++ "\n "
+      ++ "\nPrincipal:    "
+      ++ formatCurrency (loanResultPrincipal result)
+      ++ "\nTax:          "
+      ++ formatCurrency (loanResultTax result)
+      ++ "\nComms:        "
+      ++ formatCurrency (loanCommissions result)
+      ++ "\nLiquid:       "
+      ++ formatCurrency (loanResultLiquidValue result)
+      ++ "\nInterest:     "
+      ++ formatCurrency (loanResultInterest result)
+      ++ "\nTotal PMT:    "
+      ++ formatCurrency (loanResultTotal result)
+      ++ "\n"
 
--- $> putStr (show (queryLoan query))
+
+instance Show AmortizationTable where
+  show amortizationTable =
+    let
+      generateRow (AmortizationTableItem date payment interest principal remaining total tax)
+        = let paymentStr   = printf "%3d" payment
+              dateStr      = formatDate date
+              interestStr  = formatCurrency interest
+              principalStr = formatCurrency principal
+              remainingStr = formatCurrency remaining
+              totalStr     = formatCurrency total
+              taxStr       = formatCurrency tax
+          in  hsep
+                2
+                left
+                [ text paymentStr
+                , text dateStr
+                , text interestStr
+                , text principalStr
+                , text remainingStr
+                , text totalStr
+                , text taxStr
+                ]
+
+      -- Generate the rows for the amortization table
+      rows   = map generateRow (amTable amortizationTable)
+
+      -- Generate the header row for the amortization table
+      header = hsep
+        2
+        left
+        [ text "#  "
+        , text "Date      "
+        , text "Interest     "
+        , text "Principal    "
+        , text "Remaining    "
+        , text "Payment      "
+        , text "Tax          "
+        ]
+
+      -- Generate the table
+      table = vsep 0 left (header : rows)
+    in
+      -- Render the table as a string
+      render table
