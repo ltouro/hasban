@@ -1,6 +1,7 @@
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# HLINT ignore "Use if" #-}
 {-# HLINT ignore "Redundant lambda" #-}
+{-# LANGUAGE DeriveGeneric     #-}
 
 module LoanCalculator
   ( LoanQuery(..)
@@ -12,6 +13,7 @@ module LoanCalculator
   , LoanQueryResult
   ) where
 
+import           Data.Aeson
 import           Data.Time.Calendar             ( addDays
                                                 , addGregorianMonthsClip
                                                 , addGregorianYearsClip
@@ -19,6 +21,7 @@ import           Data.Time.Calendar             ( addDays
                                                 , fromGregorian
                                                 , toGregorian
                                                 )
+import           GHC.Generics
 import           Text.PrettyPrint.Boxes         ( hsep
                                                 , left
                                                 , render
@@ -37,7 +40,9 @@ data LoanQuery = LoanQuery
   , amQueryAbsPrincipal :: Int
   , amQueryCommissions  :: [Commission]
   }
-  deriving Show
+  deriving (Show, Generic)
+instance FromJSON LoanQuery
+instance ToJSON LoanQuery
 
 data AmortizationTableItem = AmortizationTableItem
   { amTableDate      :: Date
@@ -48,10 +53,15 @@ data AmortizationTableItem = AmortizationTableItem
   , amTableTotal     :: Double
   , amTableTax       :: Double
   }
+  deriving (Eq, Show, Read, Generic)
+instance FromJSON AmortizationTableItem
+instance ToJSON AmortizationTableItem
 
 newtype AmortizationTable = AmortizationTable
   { amTable :: [AmortizationTableItem]
-  }
+  } deriving (Eq, Read, Generic)
+instance FromJSON AmortizationTable
+instance ToJSON AmortizationTable
 
 data LoanQueryResult = LoanQueryResult
   { loanResultTable       :: AmortizationTable
@@ -60,17 +70,23 @@ data LoanQueryResult = LoanQueryResult
   , loanResultPrincipal   :: Double
   , loanResultInterest    :: Double
   , loanResultTotal       :: Double
-  , loanCommissions       :: Double
+  , loanResultCommissions       :: Double
   }
+  deriving (Eq, Read, Generic)
+instance FromJSON LoanQueryResult
+instance ToJSON LoanQueryResult
 
 data Commission = Commission
   { commissionType  :: CommissionType
   , commissionValue :: Double
   }
-  deriving Show
+  deriving (Show, Generic)
+instance FromJSON Commission
+instance ToJSON Commission
 
-data CommissionType = Absolute | Percentage deriving Show
-
+data CommissionType = Absolute | Percentage deriving (Show, Generic)
+instance FromJSON CommissionType
+instance ToJSON CommissionType
 
 data Frequency =
   Monthly |
@@ -78,8 +94,9 @@ data Frequency =
   Weekly |
   Daily |
   Yearly
-  deriving (Enum, Show)
-
+  deriving (Enum, Show, Generic)
+instance FromJSON Frequency
+instance ToJSON Frequency
 
 -- FV = PV(1+ r)^n
 futureValue :: Double -> Double -> Int -> Double
@@ -111,7 +128,7 @@ liquidValue loan table =
 queryLoan :: LoanQuery -> LoanQueryResult
 queryLoan loan =
   let comm = totalCommissionValue loan
-      accum field table = foldr (\p acc -> acc + field p) 0 (amTable table)
+      accum field table' = foldr (\p acc -> acc + field p) 0 (amTable table')
       table = generateAmortizationTable loan
   in  LoanQueryResult
         { loanResultTable       = table
@@ -120,7 +137,7 @@ queryLoan loan =
         , loanResultPrincipal   = amTableRemaining (head (amTable table))
         , loanResultInterest    = accum amTableInterest table
         , loanResultTotal       = accum amTableTotal table
-        , loanCommissions       = comm
+        , loanResultCommissions       = comm
         }
 
 {- $>
@@ -330,7 +347,7 @@ instance Show LoanQueryResult where
           ++ "\nTax:          "
           ++ formatCurrency (loanResultTax result)
           ++ "\nComms:        "
-          ++ formatCurrency (loanCommissions result)
+          ++ formatCurrency (loanResultCommissions result)
           ++ "\nLiquid:       "
           ++ formatCurrency (loanResultLiquidValue result)
           ++ "\nInterest:     "

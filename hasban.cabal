@@ -12,26 +12,39 @@ cabal-version:       >=1.10
 extra-source-files:  README.md
 
 library
-  ghc-options: -Wall
   hs-source-dirs:      src
-  exposed-modules:     LoanCalculator                       
+  exposed-modules:     
+    HelloApi      
+    LoanApi                
+    LoanCalculator
+  other-modules:
   build-depends:       base >= 4.7 && < 5
                        , servant
                        , servant-server
-                       , servant-swagger
-                       , swagger2
-                       , text
-                       , wai
-                       , aeson
-                       , warp
+                       , text                     
+                       , aeson                      
                        , bytestring
-                       , mtl
-                       , transformers
+                       , time
+                       , boxes
   default-language:    Haskell2010
+  ghc-options: -Wall
 
 executable hasban
   hs-source-dirs:      app
   main-is:             Main.hs
   default-language:    Haskell2010
-  build-depends:       base, time, boxes, servant
+  build-depends:       base >= 4.7 && < 5
+                      , servant
+                      , servant-server
+                      , servant-swagger
+                      , swagger2
+                      , text
+                      , wai
+                      , wai-logger
+                      , aeson
+                      , warp
+                      , bytestring
+                      , mtl
+                      , transformers
+                      , hasban
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N

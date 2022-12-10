@@ -1,7 +1,10 @@
 :set -fwarn-unused-binds -fwarn-unused-imports
 :set -isrc
-:load date boxes 
+:load date boxes aeson servant servant-server text bytestring
 :set -package boxes
 :set -package time
-:load ./src/LoanCalculator.hs
-:load ./app/Main.hs
+:set -package aeson
+:set -package text
+:set -package bytestring
+:set -package servant
+:set -package servant-server

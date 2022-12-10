@@ -1,31 +1,33 @@
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE DataKinds #-}
+module Main where
 
-module Main where 
-	
-import Servant ( PlainText
-               , Get
-               , ServerT
-               , hoistServer -- Servant function to make a custom monad with with Servant.
-               , Proxy(..)
-               , type (:>)      -- Syntax for importing type operator
-               , type (:<|>)
-               , (:<|>)(..)
-               )
-import Servant.Server (Handler, Application, serve)
-import Network.Wai.Handler.Warp (run)
-import Control.Monad.Reader (runReader, Reader)
+-- import           HelloApi
+import           LoanApi
+import           Network.Wai
+import           Network.Wai.Handler.Warp
+import           Network.Wai.Logger       (withStdoutLogger)
+import           Servant
 
--- Define the API's type by specifying the endpoint and its return type
-type HelloWorldAPI = "hello" :> Get '[PlainText] Text
+type API = LoanAPI -- :<|> HelloAPI 
 
--- Define the handler function that will be called when the endpoint is called
-helloWorldHandler :: Server HelloWorldAPI
-helloWorldHandler = return "Hello, World!"
+mainApi :: Proxy API
+mainApi = Proxy
 
--- Define the main function that runs the API server
+server :: Server API
+server = loan :<|> liquid -- :<|> hello :<|> user
+    where
+        -- hello = return "Hello world"
+        -- user n a = return $ User n a
+        loan l = return (handleLoanQuery l)
+        liquid l = return (handleLiquidLoanQuery l)
+
+app :: Application
+app = serve mainApi server
+
 main :: IO ()
-main = run 8080 $ serve (Proxy :: Proxy HelloWorldAPI) helloWorldHandler
+main = do
+    withStdoutLogger $ \aplogger -> do
+        let settings = setPort 8080 $ setLogger aplogger defaultSettings
+        runSettings settings app
