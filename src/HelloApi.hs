@@ -3,17 +3,25 @@
 {-# LANGUAGE TypeOperators     #-}
 module HelloApi where
 
-import Data.Aeson ( ToJSON, FromJSON )
-import Data.Proxy ( Proxy(..) )
-import           Data.Text                  (Text)
-import GHC.Generics ( Generic )
-import Servant.API
-    ( type (:>), JSON, type (:<|>), Capture, PlainText, Get )
+import           Data.Aeson                     ( FromJSON
+                                                , ToJSON
+                                                )
+import           Data.Proxy                     ( Proxy(..) )
+import           Data.Text                      ( Text )
+import           GHC.Generics                   ( Generic )
+import           Servant.API                    ( type (:<|>)
+                                                , type (:>)
+                                                , Capture
+                                                , Get
+                                                , JSON
+                                                , PlainText
+                                                )
 
 data User = User
     { name :: Text
     , age  :: Int
-    } deriving (Eq, Show, Read, Generic)
+    }
+    deriving (Eq, Show, Read, Generic)
 instance FromJSON User
 instance ToJSON User
 

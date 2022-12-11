@@ -1,4 +1,7 @@
 {-# LANGUAGE DeriveGeneric     #-}
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# HLINT ignore "Redundant lambda" #-}
+{-# HLINT ignore "Use if" #-}
 
 module LoanCalculator
   ( LoanQuery(..)
@@ -67,7 +70,7 @@ data LoanQueryResult = LoanQueryResult
   , loanResultPrincipal   :: Double
   , loanResultInterest    :: Double
   , loanResultTotal       :: Double
-  , loanResultCommissions       :: Double
+  , loanResultCommissions :: Double
   }
   deriving (Eq, Read, Generic)
 instance FromJSON LoanQueryResult
@@ -134,7 +137,7 @@ queryLoan loan =
         , loanResultPrincipal   = amTableRemaining (head (amTable table))
         , loanResultInterest    = accum amTableInterest table
         , loanResultTotal       = accum amTableTotal table
-        , loanResultCommissions       = comm
+        , loanResultCommissions = comm
         }
 
 {- $>
