@@ -13,12 +13,13 @@ module LoanCalculator
   , LoanQueryResult
   ) where
 
-import Data.Aeson
-import Data.Time.Calendar (addDays, addGregorianMonthsClip, addGregorianYearsClip, diffDays,
-                           fromGregorian, toGregorian)
-import GHC.Generics
-import Text.PrettyPrint.Boxes (hsep, left, render, text, vsep)
-import Text.Printf (printf)
+import           Data.Aeson
+import           Data.Time.Calendar     (addDays, addGregorianMonthsClip,
+                                         addGregorianYearsClip, diffDays,
+                                         fromGregorian, toGregorian)
+import           GHC.Generics
+import           Text.PrettyPrint.Boxes (hsep, left, render, text, vsep)
+import           Text.Printf            (printf)
 
 data LoanQuery = LoanQuery
   { amQueryAmount       :: Double
@@ -346,6 +347,9 @@ instance Show LoanQueryResult where
           ++ formatCurrency (loanResultTotal result)
           ++ "\n"
 
+
+add' :: Double -> Double
+add' n = n + n
 
 instance Show AmortizationTable where
   show amortizationTable =

@@ -1,21 +1,14 @@
-{-# LANGUAGE DataKinds         #-}
-{-# LANGUAGE DeriveGeneric     #-}
-{-# LANGUAGE TypeOperators     #-}
+{-# LANGUAGE DataKinds     #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE TypeOperators #-}
 module HelloApi where
 
-import           Data.Aeson                     ( FromJSON
-                                                , ToJSON
-                                                )
-import           Data.Proxy                     ( Proxy(..) )
-import           Data.Text                      ( Text )
-import           GHC.Generics                   ( Generic )
-import           Servant.API                    ( type (:<|>)
-                                                , type (:>)
-                                                , Capture
-                                                , Get
-                                                , JSON
-                                                , PlainText
-                                                )
+import           Data.Aeson   (FromJSON, ToJSON)
+import           Data.Proxy   (Proxy (..))
+import           Data.Text    (Text)
+import           GHC.Generics (Generic)
+import           Servant.API  (Capture, Get, JSON, PlainText, type (:<|>),
+                               type (:>))
 
 data User = User
     { name :: Text

@@ -1,21 +1,16 @@
-{-# LANGUAGE DataKinds         #-}
-{-# LANGUAGE TypeOperators     #-}
-{-# LANGUAGE DeriveGeneric     #-}
+{-# LANGUAGE DataKinds     #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE TypeOperators #-}
 
 module LoanApi
     ( LoanAPI
     , loanServer
     ) where
 
-import           Data.Aeson                     ( FromJSON
-                                                , ToJSON
-                                                )
-import           GHC.Generics                   ( Generic )
-import           LoanCalculator                 ( LoanQuery
-                                                , LoanQueryResult
-                                                , asLiquidValueLoan
-                                                , queryLoan
-                                                )
+import           Data.Aeson     (FromJSON, ToJSON)
+import           GHC.Generics   (Generic)
+import           LoanCalculator (LoanQuery, LoanQueryResult, asLiquidValueLoan,
+                                 queryLoan)
 import           Servant
 
 data LiquidResult = LiquidResult

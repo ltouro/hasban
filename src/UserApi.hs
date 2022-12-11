@@ -1,20 +1,20 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DataKinds                  #-}
+{-# LANGUAGE DeriveGeneric              #-}
+{-# LANGUAGE DerivingStrategies         #-}
 {-# LANGUAGE EmptyDataDecls             #-}
 {-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GADTs                      #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE QuasiQuotes                #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
+{-# LANGUAGE StandaloneDeriving         #-}
 {-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE TypeFamilies               #-}
-{-# LANGUAGE DerivingStrategies #-}
-{-# LANGUAGE StandaloneDeriving #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE TypeOperators              #-}
+{-# LANGUAGE UndecidableInstances       #-}
 {-# OPTIONS_GHC -Wno-name-shadowing #-}
 
 module UserApi
@@ -23,34 +23,21 @@ module UserApi
   , migrateUsers
   ) where
 
-import           Control.Monad.IO.Class         ( liftIO )
-import           Data.Text                      ( Text )
-import           Database.Persist               ( Key )
-import           Database.Persist.Sql.Migration ( Migration )
-import           Database.Persist.Sqlite        ( (==.)
-                                                , ConnectionPool
-                                                , entityVal
-                                                , insert
-                                                , runSqlPersistMPool
-                                                , selectFirst
-                                                )
-import           Servant                        ( type (:<|>)(..)
-                                                , type (:>)
-                                                , Capture
-                                                , Get
-                                                , JSON
-                                                , Post
-                                                , ReqBody
-                                                , Server
-                                                )
+import           Control.Monad.IO.Class         (liftIO)
+import           Data.Text                      (Text)
+import           Database.Persist               (Key)
+import           Database.Persist.Sql.Migration (Migration)
+import           Database.Persist.Sqlite        (ConnectionPool, entityVal,
+                                                 insert, runSqlPersistMPool,
+                                                 selectFirst, (==.))
+import           Servant                        (Capture, Get, JSON, Post,
+                                                 ReqBody, Server,
+                                                 type (:<|>) (..), type (:>))
 
-import           Database.Persist.TH            ( mkMigrate
-                                                , mkPersist
-                                                , persistLowerCase
-                                                , share
-                                                , sqlSettings
-                                                )
-import           GHC.Generics                   ( Generic )
+import           Database.Persist.TH            (mkMigrate, mkPersist,
+                                                 persistLowerCase, share,
+                                                 sqlSettings)
+import           GHC.Generics                   (Generic)
 
 share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
 User json
