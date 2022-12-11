@@ -1,0 +1,205 @@
+-- {-# LANGUAGE DeriveAnyClass #-}
+-- {-# LANGUAGE DeriveGeneric #-}
+-- {-# LANGUAGE DerivingStrategies #-}
+-- {-# LANGUAGE OverloadedStrings #-}
+-- {-# LANGUAGE TypeApplications #-}
+-- {-# OPTIONS_GHC -Wno-deprecations #-}
+
+-- module Elastic
+--   ( main,
+--   )
+-- where
+
+-- import Control.Monad.IO.Class (MonadIO, liftIO)
+-- import Data.Aeson (FromJSON (..), object, (.=))
+-- import Data.List.NonEmpty (NonEmpty (..))
+-- import Data.Text (Text)
+-- import Data.Time.Calendar (Day (..))
+-- import Data.Time.Clock (UTCTime (..), secondsToDiffTime)
+-- import qualified Data.Vector as V
+-- import Database.Bloodhound
+-- import GHC.Generics (Generic)
+-- import Network.HTTP.Client (newManager, ManagerSettings)
+-- import Network.HTTP.Client.TLS (tlsManagerSettings)
+-- import Text.Show.Pretty (pPrint)
+
+-- data TweetMapping = TweetMapping deriving stock (Eq, Show)
+
+-- instance ToJSON TweetMapping where
+--   toJSON TweetMapping =
+--     object
+--       [ "properties"
+--           .= object ["location" .= object ["type" .= ("geo_point" :: Text)]]
+--       ]
+
+-- data Tweet = Tweet
+--   { user :: Text,
+--     postDate :: UTCTime,
+--     message :: Text,
+--     age :: Int,
+--     location :: LatLon
+--   }
+--   deriving stock (Eq, Generic, Show)
+--   deriving anyclass (FromJSON, ToJSON)
+
+-- exampleTweet :: Tweet
+-- exampleTweet =
+--   Tweet
+--     { 
+--       user = "ltouro",
+--       postDate = UTCTime (ModifiedJulianDay 55000) (secondsToDiffTime 30),
+--       message = "Use haskell 3!",
+--       age = 10001,
+--       location = loc
+--     }
+--   where
+--     loc = LatLon {lat = -55.40, lon = -6.06}
+
+-- main :: IO ()
+-- main = runBH' $ do
+--   -- set up index
+--   _ <- createIndex indexSettings testIndex
+--   True <- indexExists testIndex
+--   _ <- putMapping testIndex TweetMapping
+
+--   -- create a tweet
+--   resp <- indexDocument testIndex defaultIndexDocumentSettings exampleTweet (DocId "3")
+--   printResponseBody resp
+--   {-
+--        IndexedDocument
+--          { idxDocIndex = "twitter"
+--          , idxDocType = "_doc"
+--          , idxDocId = "1"
+--          , idxDocVersion = 3
+--          , idxDocResult = "updated"
+--          , idxDocShards =
+--              ShardResult
+--                { shardTotal = 1
+--                , shardsSuccessful = 1
+--                , shardsSkipped = 0
+--                , shardsFailed = 0
+--                }
+--          , idxDocSeqNo = 2
+--          , idxDocPrimaryTerm = 1
+--          }
+--   -}
+
+--   -- bulk load
+--   let stream = V.fromList [BulkIndex testIndex (DocId "3") (toJSON exampleTweet)]
+--   _ <- bulk stream
+--   -- Bulk loads require an index refresh before new data is loaded.
+--   _ <- refreshIndex testIndex
+
+--   -- set up some aliases
+--   let aliasName = IndexName "twitter-alias"
+--   let iAlias = IndexAlias testIndex (IndexAliasName aliasName)
+--   let aliasRouting = Nothing
+--   let aliasFiltering = Nothing
+--   let aliasCreate = IndexAliasCreate aliasRouting aliasFiltering
+--   _ <- updateIndexAliases (AddAlias iAlias aliasCreate :| [])
+--   True <- indexExists aliasName
+
+--   -- create a template so that if we just write into an index named tweet-2017-01-02, for instance, the index will be automatically created with the given mapping. This is a great idea for any ongoing indices because it makes them much easier to manage and rotate.
+--   let idxTpl = IndexTemplate [IndexPattern "tweet-*"] (Just (IndexSettings (ShardCount 1) (ReplicaCount 1) defaultIndexMappingsLimits)) (toJSON TweetMapping)
+--   let templateName = TemplateName "tweet-tpl"
+--   tplResp <- putTemplate idxTpl templateName
+--   printResponseBody tplResp
+--   {-
+--     Acknowledged { isAcknowledged = True }
+--   -}
+--   True <- templateExists templateName
+
+--   -- do a search
+--   let boost = Nothing
+--   let query = TermQuery (Term "user" "ltouro") boost
+--   let search = mkSearch (Just query) boost
+--   tweetResp <- searchByIndex @_ @Tweet testIndex search
+--   printResponseBody tweetResp
+--   {-
+--     SearchResult
+--       { took = 1
+--       , timedOut = False
+--       , shards =
+--           ShardResult
+--             { shardTotal = 1
+--             , shardsSuccessful = 1
+--             , shardsSkipped = 0
+--             , shardsFailed = 0
+--             }
+--       , searchHits =
+--           SearchHits
+--             { hitsTotal = HitsTotal { value = 2 , relation = HTR_EQ }
+--             , maxScore = Just 0.18232156
+--             , hits =
+--                 [ Hit
+--                     { hitIndex = IndexName "twitter"
+--                     , hitDocId = DocId "1"
+--                     , hitScore = Just 0.18232156
+--                     , hitSource =
+--                         Just
+--                           Tweet
+--                             { user = "bitemyapp"
+--                             , postDate = 2009-06-18 00:00:10 UTC
+--                             , message = "Use haskell!"
+--                             , age = 10000
+--                             , location = LatLon { lat = 40.12 , lon = -71.3 }
+--                             }
+--                     , hitSort = Nothing
+--                     , hitFields = Nothing
+--                     , hitHighlight = Nothing
+--                     , hitInnerHits = Nothing
+--                     }
+--                 , Hit
+--                     { hitIndex = IndexName "twitter"
+--                     , hitDocId = DocId "2"
+--                     , hitScore = Just 0.18232156
+--                     , hitSource =
+--                         Just
+--                           Tweet
+--                             { user = "bitemyapp"
+--                             , postDate = 2009-06-18 00:00:10 UTC
+--                             , message = "Use haskell!"
+--                             , age = 10000
+--                             , location = LatLon { lat = 40.12 , lon = -71.3 }
+--                             }
+--                     , hitSort = Nothing
+--                     , hitFields = Nothing
+--                     , hitHighlight = Nothing
+--                     , hitInnerHits = Nothing
+--                     }
+--                 ]
+--             }
+--       , aggregations = Nothing
+--       , scrollId = Nothing
+--       , suggest = Nothing
+--       , pitId = Nothing
+--       }
+--   -}
+
+--   -- clean up
+--   -- _ <- deleteTemplate templateName
+--   -- _ <- deleteIndex testIndex
+--   -- False <- indexExists testIndex
+
+--   return ()
+--   where
+--     testServer = Server "https://hasban.es.us-central1.gcp.cloud.es.io"
+--     -- mgr = newManager tlsManagerSettings
+--     -- env = (mkBHEnv testServer mgr) { bhRequestHook = basicAuthHook (EsUsername "elastic") (EsPassword "9wrwxVgcViGKMkCitZhWI20O") }
+--     runBH' = withBH' tlsManagerSettings testServer
+--     testIndex = IndexName "twitter"
+--     indexSettings = IndexSettings (ShardCount 1) (ReplicaCount 0) defaultIndexMappingsLimits
+
+-- printResponseBody :: (MonadIO m, FromJSON body, Show body) => BHResponse body -> m ()
+-- printResponseBody =
+--   liftIO
+--     . pPrint
+--     . either (error . show) id
+--     . either (error . show) id
+--     . parseEsResponse
+
+-- withBH' :: ManagerSettings -> Server -> BH IO a -> IO a
+-- withBH' ms s f = do
+--   mgr <- newManager ms
+--   let env = (mkBHEnv s mgr) { bhRequestHook = basicAuthHook (EsUsername "elastic") (EsPassword "ZGK4ezZjnfpPREuz9x6Ns9UP") }
+--   runBH env f

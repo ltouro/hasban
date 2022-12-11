@@ -3,11 +3,12 @@
 {-# LANGUAGE TypeOperators     #-}
 module HelloApi where
 
-import           Data.Aeson
-import           Data.Proxy
+import Data.Aeson ( ToJSON, FromJSON )
+import Data.Proxy ( Proxy(..) )
 import           Data.Text                  (Text)
-import           GHC.Generics
-import           Servant.API
+import GHC.Generics ( Generic )
+import Servant.API
+    ( type (:>), JSON, type (:<|>), Capture, PlainText, Get )
 
 data User = User
     { name :: Text

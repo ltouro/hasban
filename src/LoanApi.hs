@@ -2,17 +2,21 @@
 {-# LANGUAGE TypeOperators     #-}
 {-# LANGUAGE DeriveGeneric     #-}
 
-module LoanApi where
+module LoanApi
+    ( LoanAPI
+    , loanServer
+    ) where
 
-import           Data.Aeson
-import           Data.Proxy
-import           GHC.Generics
+import           Data.Aeson                     ( FromJSON
+                                                , ToJSON
+                                                )
+import           GHC.Generics                   ( Generic )
 import           LoanCalculator                 ( LoanQuery
                                                 , LoanQueryResult
                                                 , asLiquidValueLoan
                                                 , queryLoan
                                                 )
-import           Servant.API
+import           Servant
 
 data LiquidResult = LiquidResult
     { liquidResultQuery  :: LoanQuery
@@ -22,8 +26,11 @@ data LiquidResult = LiquidResult
 instance FromJSON LiquidResult
 instance ToJSON LiquidResult
 
-type LoanAPI  = "loan"   :> ReqBody '[JSON] LoanQuery :> Post '[JSON] LoanQueryResult
-           :<|> "liquid" :> ReqBody '[JSON] LoanQuery :> Post '[JSON] LiquidResult
+type LoanAPI  = "loan" :>
+        (
+                           ReqBody '[JSON] LoanQuery :> Post '[JSON] LoanQueryResult
+        :<|> "liquid" :>   ReqBody '[JSON] LoanQuery :> Post '[JSON] LiquidResult
+        )
 
 handleLoanQuery :: LoanQuery -> LoanQueryResult
 handleLoanQuery = queryLoan
@@ -34,5 +41,8 @@ handleLiquidLoanQuery l =
         result = queryLoan query
     in  LiquidResult { liquidResultQuery = query, liquidResultResult = result }
 
-loanApi :: Proxy LoanAPI
-loanApi = Proxy
+loanServer :: Server LoanAPI
+loanServer = loan :<|> loanLiquid
+  where
+    loan l = return (handleLoanQuery l)
+    loanLiquid l = return (handleLiquidLoanQuery l)

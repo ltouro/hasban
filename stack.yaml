@@ -40,7 +40,7 @@ packages:
 # - git: https://github.com/commercialhaskell/stack.git
 #   commit: e7b331f14bcffb8367cd58fbfc8b40ec7642100a
 #
-# extra-deps: []
+extra-deps: [ "bloodhound-0.21.0.0@sha256:fc20da30aee25e4af32aa292dbd1492b75b681f215a9cc67ce0f3d23b13584ec,3321" ]
 
 # Override default flag values for local packages and extra-deps
 # flags: {}

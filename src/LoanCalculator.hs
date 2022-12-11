@@ -1,6 +1,3 @@
-{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
-{-# HLINT ignore "Use if" #-}
-{-# HLINT ignore "Redundant lambda" #-}
 {-# LANGUAGE DeriveGeneric     #-}
 
 module LoanCalculator
