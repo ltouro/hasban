@@ -1,3 +1,8 @@
-:load date boxes 
+:load date boxes aeson servant servant-server text bytestring
 :set -package boxes
 :set -package time
+:set -package aeson
+:set -package text
+:set -package bytestring
+:set -package servant
+:set -package servant-server

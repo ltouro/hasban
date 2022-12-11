@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric     #-}
+{-# LANGUAGE DeriveGeneric #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# HLINT ignore "Redundant lambda" #-}
 {-# HLINT ignore "Use if" #-}
@@ -13,22 +13,12 @@ module LoanCalculator
   , LoanQueryResult
   ) where
 
-import           Data.Aeson
-import           Data.Time.Calendar             ( addDays
-                                                , addGregorianMonthsClip
-                                                , addGregorianYearsClip
-                                                , diffDays
-                                                , fromGregorian
-                                                , toGregorian
-                                                )
-import           GHC.Generics
-import           Text.PrettyPrint.Boxes         ( hsep
-                                                , left
-                                                , render
-                                                , text
-                                                , vsep
-                                                )
-import           Text.Printf                    ( printf )
+import Data.Aeson
+import Data.Time.Calendar (addDays, addGregorianMonthsClip, addGregorianYearsClip, diffDays,
+                           fromGregorian, toGregorian)
+import GHC.Generics
+import Text.PrettyPrint.Boxes (hsep, left, render, text, vsep)
+import Text.Printf (printf)
 
 data LoanQuery = LoanQuery
   { amQueryAmount       :: Double
@@ -141,26 +131,26 @@ queryLoan loan =
         }
 
 {- $>
-  let query = asLiquidValueLoan LoanQuery { 
-    amQueryAmount = 31500,  
-    amQueryRate = 0.047,  
-    amQueryTerms = 6, 
-    amQueryFrequency = Monthly, 
+  let query = asLiquidValueLoan LoanQuery {
+    amQueryAmount = 31500,
+    amQueryRate = 0.047,
+    amQueryTerms = 6,
+    amQueryFrequency = Monthly,
     amQueryStartDate = (2022, 02, 28),
     amQueryAbsInterest = 0,
     amQueryAbsPrincipal = 2,
     amQueryCommissions = [Commission Percentage 2.0, Commission Percentage 2.5]
-  }  
+  }
 <$ -}
 
--- $> putStr (show (queryLoan query)) 
+-- $> putStr (show (queryLoan query))
 
 -- This function generates an amortization table, given a LoanQuery
 generateAmortizationTable :: LoanQuery -> AmortizationTable
 generateAmortizationTable loan =
   let
     -- This functions gets the payment for a given payment number in the schedule
-    -- It allows three states for amortization: 
+    -- It allows three states for amortization:
     --  absolving principal with and interest table: amQueryAbsInterest, amQueryAbsPrincipal
     --  absolving principal table: amQueryAbsPrincipal
     --  PRICE

@@ -1,20 +1,15 @@
+cabal-version:       2.4
+
 name:                hasban
 version:             0.1.0.0
-homepage:            https://github.com/ltouro/hasban#readme
-license:             BSD3
+license:             NONE
 license-file:        LICENSE
-author:              Lucas
-maintainer:          lucas@uy3.com.br
-copyright:           2022 Lucas T C
-category:            Finance
-build-type:          Simple
-cabal-version:       >=1.10
-extra-source-files:  README.md
+extra-source-files:  CHANGELOG.md
 
 library
   hs-source-dirs:      src
   exposed-modules:     
-    HelloApi      
+    -- HelloApi      
     LoanApi                
     UserApi
     LoanCalculator
