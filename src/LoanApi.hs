@@ -17,10 +17,9 @@ data LiquidResult = LiquidResult
     { liquidResultQuery  :: LoanQuery
     , liquidResultResult :: LoanQueryResult
     }
-    deriving (Show, Generic)
+        deriving (Show, Generic)
 instance FromJSON LiquidResult
 instance ToJSON LiquidResult
-
 type LoanAPI  = "loan" :>
         (
                            ReqBody '[JSON] LoanQuery :> Post '[JSON] LoanQueryResult

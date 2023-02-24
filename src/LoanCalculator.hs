@@ -8,6 +8,7 @@ module LoanCalculator
   , Frequency(..)
   , Commission
   , CommissionType
+  , AmortizationType
   , queryLoan
   , asLiquidValueLoan
   , LoanQueryResult
@@ -30,6 +31,7 @@ data LoanQuery = LoanQuery
   , amQueryAbsInterest  :: Int
   , amQueryAbsPrincipal :: Int
   , amQueryCommissions  :: [Commission]
+  , amQueryAmortizationType  :: AmortizationType
   }
   deriving (Show, Generic)
 instance FromJSON LoanQuery
@@ -79,6 +81,13 @@ data CommissionType = Absolute | Percentage deriving (Show, Generic)
 instance FromJSON CommissionType
 instance ToJSON CommissionType
 
+data AmortizationType =
+    PRICE |
+    SAC
+  deriving (Enum, Show, Generic)
+instance FromJSON AmortizationType
+instance ToJSON AmortizationType
+
 data Frequency =
   Monthly |
   Biweekly |
@@ -89,17 +98,25 @@ data Frequency =
 instance FromJSON Frequency
 instance ToJSON Frequency
 
--- FV = PV(1+ r)^n
+-- FV = PV * CR
 futureValue :: Double -> Double -> Int -> Double
 futureValue pv r n = pv * compositeRate r n
 
+-- CR = (1+ r)^n
 compositeRate :: Double -> Int -> Double
 compositeRate r n = (1 + r) ^ n
 
--- This function calculates the monthly payment for an amortization schedule
+-- This function calculates the variable monthly payment for an SAC amortization schedule
 -- given the loan amount, interest rate, and loan term
-calculatePayment :: Double -> Double -> Int -> Double
-calculatePayment loanAmount interestRate loanTerm =
+calculatePaymentSac :: Double -> Double -> Int -> Double -> Double
+calculatePaymentSac loanAmount interestRate loanTerm currentPrincipal =
+  let amortization = loanAmount / fromIntegral loanTerm
+  in  amortization + interestRate * currentPrincipal
+
+-- This function calculates the fixed monthly payment for an PRICE amortization schedule
+-- given the loan amount, interest rate, and loan term
+calculatePaymentPrice :: Double -> Double -> Int -> Double
+calculatePaymentPrice loanAmount interestRate loanTerm =
   let paymentNo = fromIntegral loanTerm
   in  loanAmount
         * futureValue interestRate interestRate paymentNo
@@ -150,42 +167,23 @@ queryLoan loan =
 generateAmortizationTable :: LoanQuery -> AmortizationTable
 generateAmortizationTable loan =
   let
-    -- This functions gets the payment for a given payment number in the schedule
-    -- It allows three states for amortization:
-    --  absolving principal with and interest table: amQueryAbsInterest, amQueryAbsPrincipal
-    --  absolving principal table: amQueryAbsPrincipal
-    --  PRICE
-    -- amQueryAbsPrincipal must be > than amQueryAbsInterest
-    pmt paymentNo = case paymentNo > amQueryAbsPrincipal loan of
+    -- This functions gets the payment for a given payment number in the schedule    
+    pmt paymentNo balance = case paymentNo > amQueryAbsPrincipal loan of
       -- There is a payment of principal and interest
-      True ->
-        calculatePayment startValue (amQueryRate loan) numberOfPrincipalPayments
+      True -> case amQueryAmortizationType loan  of
+        SAC -> calculatePaymentSac startValue (amQueryRate loan) numberOfPrincipalPayments balance
+        PRICE -> calculatePaymentPrice startValue (amQueryRate loan) numberOfPrincipalPayments
       False -> case paymentNo > amQueryAbsInterest loan of
         -- There is a payment of interest
-        True  -> currentInterest paymentNo
+        True  -> currentInterest balance
         -- There is no payment
         False -> 0
 
     numberOfPrincipalPayments = amQueryTerms loan - amQueryAbsPrincipal loan
 
     -- The interest for given paymentNo
-    currentInterest paymentNo = currentBalance paymentNo * amQueryRate loan
+    currentInterest balance = balance * amQueryRate loan
 
-    -- The amount left to pay in the start of a given period of time
-    currentBalance paymentNo = remainingBalance (paymentNo - 1)
-
-    -- The amount left to debitor pay after the payment is performed
-    -- if no payment, the remainingBalane should be > currentBalance
-    remainingBalance paymentNo = case paymentNo of
-      -- The debit starting point is the amount borrowed
-      0 -> amQueryAmount loan
-      _ -> case paymentNo < amQueryAbsInterest loan of
-        -- No payment was performed yet, calculates the future value of the debit to the given paymentNo
-        True -> futureValue (amQueryAmount loan) (amQueryRate loan) paymentNo
-        -- Calculate the balance considering previous payments and current payment
-        -- Get last balance, add the interest, subtract the payment
-        False ->
-          currentBalance paymentNo + currentInterest paymentNo - pmt paymentNo
 
     -- The value when is due the first payment of principal
     startValue = futureValue (amQueryAmount loan)
@@ -193,18 +191,19 @@ generateAmortizationTable loan =
                              (amQueryAbsInterest loan)
 
     -- The amount that was subtracted from the principal after this paymentNo (can be negative)
-    amortization paymentNo = pmt paymentNo - currentInterest paymentNo
+    amortization :: Int -> Double -> Double
+    amortization paymentNo balance = pmt paymentNo balance- currentInterest balance
 
     -- Taxes for a given payment
-    tax paymentNo = case amortization paymentNo > 0 of
-      True  -> brazilianIofTax 0.0038 0.000082 paymentNo
+    tax paymentNo balance = case amortization paymentNo balance > 0 of
+      True  -> brazilianIofTax 0.0038 0.000082 paymentNo balance
       False -> 0
 
-    -- BR IOF calculation dynamics for a given payment (@ToDo: parametrize over the constants)
-    brazilianIofTax baseTax dailyTax paymentNo =
+    -- BR IOF calculation dynamics for a given payment
+    brazilianIofTax baseTax dailyTax paymentNo balance =
       let startDate  = amQueryStartDate loan
           dueDate    = addTerm startDate (amQueryFrequency loan) paymentNo
-          am         = amortization paymentNo
+          am         = amortization paymentNo balance
           days       = fromIntegral (numberOfDays startDate dueDate)
           cappedDays = min 365 days
           noPayments = fromIntegral numberOfPrincipalPayments
@@ -220,23 +219,31 @@ generateAmortizationTable loan =
                                     , amTableTax       = 0
                                     }
 
-    itemForPaymentNo paymentNo = AmortizationTableItem
+    itemForPaymentNo paymentNo prevItem =
+      let
+        balance = amTableRemaining prevItem
+        interest = currentInterest balance
+        payment = pmt paymentNo balance
+        amort = amortization paymentNo balance
+      in
+      AmortizationTableItem
       { amTableDate      = addTerm (amQueryStartDate loan)
                                    (amQueryFrequency loan)
                                    paymentNo
       , amTablePaymentNo = paymentNo
-      , amTableInterest  = currentInterest paymentNo
-      , amTablePrincipal = max (amortization paymentNo) 0
-      , amTableRemaining = remainingBalance paymentNo
-      , amTableTotal     = pmt paymentNo
-      , amTableTax       = tax paymentNo
+      , amTableInterest  = interest
+      , amTablePrincipal = max amort 0
+      , amTableRemaining = balance + interest - payment
+      , amTableTotal     = payment
+      , amTableTax       = tax paymentNo balance
       }
+
+    paymentItems prevItem paymentNo = itemForPaymentNo paymentNo prevItem
+
   in
     AmortizationTable
-      { amTable = initial
-                    : [ itemForPaymentNo paymentNo
-                      | paymentNo <- [1 .. amQueryTerms loan]
-                      ]
+      {
+        amTable = scanl paymentItems initial [1 .. amQueryTerms loan]
       }
 
 -- Calculate the total value of the given list of commissions
@@ -265,6 +272,7 @@ asLiquidValueLoan loan =
                 , amQueryAbsInterest  = amQueryAbsInterest loan
                 , amQueryAbsPrincipal = amQueryAbsPrincipal loan
                 , amQueryCommissions  = amQueryCommissions loan
+                , amQueryAmortizationType = amQueryAmortizationType loan
                 }
 
 type AccuracyLevel = Double
@@ -294,11 +302,12 @@ findAmountForLiquidAmount loan = \n ->
                            , amQueryAbsInterest  = amQueryAbsInterest loan
                            , amQueryAbsPrincipal = amQueryAbsPrincipal loan
                            , amQueryCommissions  = amQueryCommissions loan
+                           , amQueryAmortizationType = amQueryAmortizationType loan
                            }
       val = liquidValue testLoan (loanResultTable $ queryLoan testLoan)
   in  amQueryAmount loan - val
 
--- This function adds the given number of periods of certain frequency to the given date and returns the resulting date
+-- return the date added of given number of periods of certain frequency
 addTerm :: Date -> Frequency -> Int -> Date
 addTerm (year, month, day) paymentFrequency numPeriods =
   let current = fromGregorian year month day
@@ -346,10 +355,6 @@ instance Show LoanQueryResult where
           ++ "\nTotal PMT:    "
           ++ formatCurrency (loanResultTotal result)
           ++ "\n"
-
-
-add' :: Double -> Double
-add' n = n + n
 
 instance Show AmortizationTable where
   show amortizationTable =

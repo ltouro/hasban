@@ -23,19 +23,21 @@ library
                       , bytestring
                       , time
                       , boxes                          
-                      , bloodhound
-                      , http-client
-                      , http-client-tls
-                      , pretty-show
-                      , semigroups
-                      , vector
                       , persistent
                       , persistent-template
                       , persistent-sqlite
-                      , string-conversions
-                      , transformers
                       , monad-logger
-                      , resourcet
+                      -- , tasty
+                      -- , tasty-hunit
+                      -- , bloodhound
+                      -- , http-client
+                      -- , http-client-tls
+                      -- , pretty-show
+                      -- , semigroups
+                      -- , vector
+                      -- , string-conversions
+                      -- , transformers
+                      -- , resourcet
   default-language:    Haskell2010
   ghc-options: -Wall
 
@@ -46,27 +48,29 @@ executable hasban
   build-depends:       base >= 4.7 && < 5
                       , servant
                       , servant-server
-                      , servant-swagger
-                      , swagger2
-                      , text
-                      , wai
-                      , wai-logger
                       , aeson
-                      , warp
-                      , bytestring
-                      , mtl
-                      , transformers
                       , hasban
-                      , bloodhound
-                      , http-client
-                      , http-client-tls
-                      , pretty-show
-                      , semigroups
-                      , vector
                       , persistent
                       , persistent-template
                       , persistent-sqlite
-                      , string-conversions
+                      , wai
+                      , wai-logger
                       , monad-logger
-                      , resourcet
+                      , warp
+                      , string-conversions
+                      -- , servant-swagger
+                      -- , swagger2
+                      , text
+                      , bytestring
+                      -- , tasty
+                      -- , tasty-hunit
+                      -- , mtl
+                      -- , transformers
+                      -- , bloodhound
+                      -- , http-client
+                      -- , http-client-tls
+                      -- , pretty-show
+                      -- , semigroups
+                      -- , vector
+                      -- , resourcet
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
