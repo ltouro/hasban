@@ -14,8 +14,8 @@ import           LoanCalculator (LoanQuery, LoanQueryResult, asLiquidValueLoan,
 import           Servant
 
 data LiquidResult = LiquidResult
-    { liquidResultQuery  :: LoanQuery
-    , liquidResultResult :: LoanQueryResult
+    { query  :: LoanQuery
+    , result :: LoanQueryResult
     }
         deriving (Show, Generic)
 instance FromJSON LiquidResult
@@ -31,9 +31,9 @@ handleLoanQuery = queryLoan
 
 handleLiquidLoanQuery :: LoanQuery -> LiquidResult
 handleLiquidLoanQuery l =
-    let query  = asLiquidValueLoan l
-        result = queryLoan query
-    in  LiquidResult { liquidResultQuery = query, liquidResultResult = result }
+    let query'  = asLiquidValueLoan l
+        result' = queryLoan query'
+    in  LiquidResult { query = query', result = result' }
 
 loanServer :: Server LoanAPI
 loanServer = loan :<|> loanLiquid
