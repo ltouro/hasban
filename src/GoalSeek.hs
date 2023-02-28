@@ -14,7 +14,7 @@ goalSeek
   -> AccuracyLevel       -- ^ The desired accuracy level.
   -> Guess               -- ^ The initial guess.
   -> MaxIterations       -- ^ The maximum number of iterations.
-  -> Double              -- ^ The optimized value.
+  -> Maybe Double              -- ^ The optimized value.
 goalSeek function accuracyLevel guess maxIterations =
   let stepSize = 0.00001
       newGuess = guess + stepSize
@@ -22,6 +22,6 @@ goalSeek function accuracyLevel guess maxIterations =
       result2 = function newGuess
       nextGuess = guess - (result1 * (newGuess - guess) / (result2 - result1))
   in  case (abs result1 <= accuracyLevel, maxIterations) of
-        (True, _) -> guess
-        (_, 0) -> guess
+        (True, _) -> Just guess
+        (_, 0) -> Nothing
         _ -> goalSeek function accuracyLevel nextGuess (maxIterations - 1)

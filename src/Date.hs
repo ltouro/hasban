@@ -28,7 +28,7 @@ data Frequency =
   Weekly |
   Daily |
   Yearly
-  deriving (Enum, Show, Generic)
+  deriving (Enum, Show, Generic, Eq)
 instance FromJSON Frequency
 instance ToJSON Frequency
 
@@ -55,8 +55,6 @@ numberOfDays  (Date year1 month1 day1) (Date year2 month2 day2) =
 formatDate :: Date -> String
 formatDate (Date year month day) =
   show year ++ "-" ++ printf "%02d" month ++ "-" ++ printf "%02d" day
-
-
 
 -- return the date added of given number of periods of certain frequency
 addTerm :: Date -> Frequency -> Int -> Date

@@ -9,34 +9,32 @@ module LoanApi
 
 import           Data.Aeson     (FromJSON, ToJSON)
 import           GHC.Generics   (Generic)
-import           LoanCalculator (LoanQuery, LoanQueryResult, asLiquidValueLoan,
+import           LoanCalculator (LoanQuery, LoanQueryResult, asNetValueLoan,
                                  queryLoan)
 import           Servant
 
-data LiquidResult = LiquidResult
+data NetResult = NetResult
     { query  :: LoanQuery
     , result :: LoanQueryResult
     }
         deriving (Show, Generic)
-instance FromJSON LiquidResult
-instance ToJSON LiquidResult
+instance FromJSON NetResult
+instance ToJSON NetResult
 type LoanAPI  = "loan" :>
         (
                            ReqBody '[JSON] LoanQuery :> Post '[JSON] LoanQueryResult
-        :<|> "liquid" :>   ReqBody '[JSON] LoanQuery :> Post '[JSON] LiquidResult
+        :<|> "net" :>   ReqBody '[JSON] LoanQuery :> Post '[JSON] (Maybe NetResult)
         )
 
 handleLoanQuery :: LoanQuery -> LoanQueryResult
 handleLoanQuery = queryLoan
 
-handleLiquidLoanQuery :: LoanQuery -> LiquidResult
-handleLiquidLoanQuery l =
-    let query'  = asLiquidValueLoan l
-        result' = queryLoan query'
-    in  LiquidResult { query = query', result = result' }
-
+handleNetLoanQuery :: LoanQuery -> Maybe NetResult
+handleNetLoanQuery l = case asNetValueLoan l of
+    Just query' -> Just NetResult { query = query', result = queryLoan query' }
+    Nothing -> Nothing
 loanServer :: Server LoanAPI
-loanServer = loan :<|> loanLiquid
+loanServer = loan :<|> loanNet
   where
     loan l = return (handleLoanQuery l)
-    loanLiquid l = return (handleLiquidLoanQuery l)
+    loanNet l = return (handleNetLoanQuery l)

@@ -9,8 +9,8 @@ module LoanCalculator
   , CommissionType(..)
   , AmortizationType(..)
   , queryLoan
-  , asLiquidValueLoan
-  , LoanQueryResult(..)  
+  , asNetValueLoan
+  , LoanQueryResult(..)
   , AmortizationTable(..)
   , AmortizationTableItem(..)
   ) where
@@ -20,18 +20,21 @@ import           Date (Date(..), formatDate, numberOfDays, Frequency(..), addTer
 import           GHC.Generics ( Generic )
 import           Text.PrettyPrint.Boxes (hsep, left, render, text, vsep)
 import           Text.Printf            (printf)
-import           GoalSeek               (goalSeek)     
-      
+import           GoalSeek               (goalSeek)
+
 data LoanQuery = LoanQuery
   { loanAmount       :: Double
   , interestRate         :: Double
+  , interestRateBase         :: Frequency
   , loanTerms        :: Int
   , paymentFrequency    :: Frequency
+  , accrualFrequency    :: Frequency
   , startDate    :: Date
   , gracePeriodInterestTerms  :: Int
   , gracePeriodPrincipalTerms :: Int
   , commissions  :: [Commission]
   , amortizationType  :: AmortizationType
+  -- , paymentDayOfMonth :: Int
   }
   deriving (Show, Generic)
 instance FromJSON LoanQuery
@@ -58,7 +61,7 @@ instance ToJSON AmortizationTable
 
 data LoanQueryResult = LoanQueryResult
   { resultSchedule       :: AmortizationTable
-  , resultLiquidValue :: Double
+  , resultNetValue :: Double
   , resultTax         :: Double
   , resultPrincipal   :: Double
   , resultInterest    :: Double
@@ -100,6 +103,10 @@ futureValue pv r n = pv * compositeRate r n
 compositeRate :: InterestRate -> PaymentNo -> InterestRate
 compositeRate r n = (1 + r) ^ n
 
+-- DR = (1+ r)^ 1 / n
+decomposeRate :: InterestRate -> Double -> InterestRate
+decomposeRate r n = (1 + r) ** (1 / n)
+
 -- This function calculates the variable monthly payment for an SAC amortization schedule
 -- given the loan amount, interest rate, loan term andd balance
 calculatePaymentSac :: CurrencyAmount -> InterestRate -> PaymentNo -> CurrencyAmount -> Double
@@ -121,19 +128,19 @@ sumTax :: AmortizationTable -> Double
 sumTax table = foldr (\p acc -> acc + financialTax p) 0 (paymentItems table)
 
 -- Gets the initial remaninig amount and subtract taxes
-liquidValue :: LoanQuery -> AmortizationTable -> Double
-liquidValue loan table =
+netValue :: LoanQuery -> AmortizationTable -> Double
+netValue loan table =
   remainingPrincipal (head (paymentItems table))
     - sumTax table
     - totalCommissionValue loan
 
 queryLoan :: LoanQuery -> LoanQueryResult
 queryLoan loan =
-  let accumulate field table' = foldr (\p acc -> acc + field p) 0 (paymentItems table')      
+  let accumulate field table' = foldr (\p acc -> acc + field p) 0 (paymentItems table')
       table = generateAmortizationTable loan
   in  LoanQueryResult
         { resultSchedule   = table
-        , resultLiquidValue   = liquidValue loan table
+        , resultNetValue   = netValue loan table
         , resultTax           = accumulate financialTax table
         , resultPrincipal     = remainingPrincipal (head (paymentItems table))
         , resultInterest      = accumulate accruedInterest table
@@ -142,7 +149,7 @@ queryLoan loan =
         }
 
 {- $>
-  let query = asLiquidValueLoan LoanQuery {
+  let query = asNetValueLoan LoanQuery {
     loanAmount = 31500,
     interestRate = 0.047,
     loanTerms = 6,
@@ -164,9 +171,9 @@ generateAmortizationTable loan = AmortizationTable
   where
     -- Compute the payment for a given payment number in the schedule
     pmt :: PaymentNo -> CurrencyAmount -> Double
-    pmt paymentNo' balance      
-      | paymentNo' <= gracePeriodPrincipalTerms loan = currentInterest balance
+    pmt paymentNo' balance
       | paymentNo' <= gracePeriodInterestTerms loan = 0
+      | paymentNo' <=  gracePeriodPrincipalTerms loan = currentInterest balance
       | otherwise = payment
       where
         payment = case amortizationType loan of
@@ -177,12 +184,46 @@ generateAmortizationTable loan = AmortizationTable
         startValue = futureValue (loanAmount loan)
                           (interestRate loan)
                           (gracePeriodInterestTerms loan)
-          
+
     numberOfPrincipalPayments = loanTerms loan - gracePeriodPrincipalTerms loan
 
     -- Compute the interest for a given balance
     currentInterest :: CurrencyAmount -> Double
-    currentInterest balance = balance * interestRate loan
+    currentInterest balance = balance * composeRate (interestRate loan) (interestRateBase loan) (accrualFrequency loan)
+
+    -- compose the rate for the frequency
+    composeRate :: InterestRate -> Frequency -> Frequency -> InterestRate
+    composeRate rate Monthly Monthly = rate
+    composeRate rate Biweekly Biweekly = rate
+    composeRate rate Weekly Weekly = rate
+    composeRate rate Daily Daily = rate
+    composeRate rate Yearly Yearly = rate
+
+    composeRate rate Daily Weekly   = compositeRate rate 7
+    composeRate rate Daily Biweekly   = compositeRate rate 14
+    composeRate rate Daily Monthly  = compositeRate rate 30
+    composeRate rate Daily Yearly   = compositeRate rate 360
+
+    composeRate rate Weekly Daily = decomposeRate rate 7
+    composeRate rate Weekly Biweekly  = compositeRate rate 2
+    composeRate rate Weekly Monthly = 1 + rate ** 4.2
+    composeRate rate Weekly Yearly = 1 + rate ** 51.42
+
+    composeRate rate Biweekly Daily = decomposeRate rate 14
+    composeRate rate Biweekly Weekly = compositeRate rate 2
+    composeRate rate Biweekly Monthly = 1 + rate ** 2.1
+    composeRate rate Biweekly Yearly = 1 + rate ** 25.71
+
+    composeRate rate Monthly Daily = decomposeRate rate 30
+    composeRate rate Monthly Weekly  = decomposeRate rate 4.2
+    composeRate rate Monthly Biweekly   = decomposeRate rate 2
+    composeRate rate Monthly Yearly    = compositeRate rate 12
+
+    composeRate rate Yearly Monthly = decomposeRate rate 12
+    composeRate rate Yearly Daily = decomposeRate rate 360
+    composeRate rate Yearly Weekly = decomposeRate rate 51.42
+    composeRate rate Yearly Biweekly  = decomposeRate rate 25.71
+
 
     -- Compute the amount that was subtracted from the principal after this payment
     amortization :: PaymentNo -> CurrencyAmount -> Double
@@ -190,16 +231,16 @@ generateAmortizationTable loan = AmortizationTable
 
     -- Compute the tax for the given payment number in the loan schedule
     tax :: PaymentNo -> CurrencyAmount -> Double
-    tax = brazilianIofTax 0.0038 0.000082 
+    tax = brazilianIofTax 0.0038 0.000082
 
     -- BR IOF calculation dynamics for a given payment
     brazilianIofTax baseTax dailyTax paymentNo' balance =
       let startDate'  = startDate loan
           dueDate'    = addTerm startDate' (paymentFrequency loan) paymentNo'
-          am         = amortization paymentNo' balance
-          days       = fromIntegral (numberOfDays startDate' dueDate')
-          cappedDays = min 365 days
-          noPayments = fromIntegral numberOfPrincipalPayments
+          am          = amortization paymentNo' balance
+          days        = fromIntegral (numberOfDays startDate' dueDate')
+          cappedDays  = min 365 days
+          noPayments  = fromIntegral numberOfPrincipalPayments
       in  ((baseTax * loanAmount loan) / noPayments)
             + (dailyTax * cappedDays * am)
 
@@ -229,7 +270,7 @@ generateAmortizationTable loan = AmortizationTable
       , accruedInterest      = interest
       , paymentAmortization  = max amort 0
       , remainingPrincipal   = balance + interest - payment
-      , dueAmount         = payment
+      , dueAmount            = payment
       , financialTax         = tax paymentNo' balance
       }
 
@@ -247,19 +288,21 @@ totalCommissionValue loan =
       percTotal                                     = sum $ map percentageValue commissions'
   in  absTotal + ((percTotal / 100) * loanAmount loan)
 
--- Convert a LoanQuery into another where the liquidValue of the later is equal to the amount of the first
-asLiquidValueLoan :: LoanQuery -> LoanQuery
-asLiquidValueLoan loan =
-  let query = testAmountForLiquidAmount loan
-      res   = goalSeek query 0.001 (loanAmount loan) 250
-  in  loan { loanAmount       = res }
+-- Convert a LoanQuery into another where the netValue of the later is equal to the amount of the first
+asNetValueLoan :: LoanQuery -> Maybe LoanQuery
+asNetValueLoan loan =
+  let query = testAmountForNetAmount loan      
+      res   = goalSeek query 0.49 (loanAmount loan) 300
+  in  case res of 
+    Nothing -> Nothing
+    Just res' -> Just $ loan { loanAmount = res' }
 
--- | Returns the liquid value difference between the original query and the test query
-testAmountForLiquidAmount :: LoanQuery -> Double -> Double
-testAmountForLiquidAmount loan n =
+-- | Returns the net value difference between the original query and the test query
+testAmountForNetAmount :: LoanQuery -> Double -> Double
+testAmountForNetAmount loan n =
   let testLoan = loan {loanAmount = n }
-      testLiquidValue = liquidValue testLoan (resultSchedule $ queryLoan testLoan)
-  in loanAmount loan - testLiquidValue
+      testNetValue = netValue testLoan (resultSchedule $ queryLoan testLoan)
+  in loanAmount loan - testNetValue
 
 formatNumber :: Double -> String
 formatNumber = printf "%10.2f"
@@ -279,8 +322,8 @@ instance Show LoanQueryResult where
           ++ formatCurrency (resultTax result)
           ++ "\nComms:        "
           ++ formatCurrency (resultCommissions result)
-          ++ "\nLiquid:       "
-          ++ formatCurrency (resultLiquidValue result)
+          ++ "\nNet:       "
+          ++ formatCurrency (resultNetValue result)
           ++ "\nInterest:     "
           ++ formatCurrency (resultInterest result)
           ++ "\nTotal PMT:    "
