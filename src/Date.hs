@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric #-}
+{-# OPTIONS_GHC -Wno-name-shadowing #-}
 
 module Date
   ( Date(..)
@@ -7,6 +8,11 @@ module Date
   , numberOfDays
   , formatDate
   , addTerm
+  , fixDate
+  , day
+  , month
+  , year
+  , diffDays
   ) where
 
 import Data.Aeson
@@ -31,6 +37,13 @@ data Frequency =
   deriving (Enum, Show, Generic, Eq)
 instance FromJSON Frequency
 instance ToJSON Frequency
+
+day :: Date -> Int 
+day (Date _ _ i) = i
+month :: Date -> Int
+month (Date _ i _) = i
+year :: Date -> Integer
+year (Date i _ _) = i
 
 toDate :: (Integer, Int, Int) -> Date
 toDate (nextYear, nextMonth, nextDay ) = Date nextYear nextMonth nextDay
@@ -67,3 +80,11 @@ addTerm (Date year month day) paymentFrequency' numPeriods =
         Weekly   -> addDays (fromIntegral numPeriods * 7) current
         Daily    -> addDays (fromIntegral numPeriods) current       
   in  toDate $ toGregorian next   
+
+fixDate :: Date -> Int -> Date
+fixDate (Date year month day) dayOfMonth 
+  | day < dayOfMonth = Date year month dayOfMonth
+  | day > dayOfMonth = if month == 12
+                          then Date (year + 1) 1 dayOfMonth
+                          else Date year (month + 1) dayOfMonth
+  | otherwise = Date year month day

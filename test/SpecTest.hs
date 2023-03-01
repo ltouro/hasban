@@ -83,14 +83,15 @@ instance Arbitrary LoanQuery where
     amount <- scaleDecimalPlaces 2 <$> choose (1000, 100000)
     interest <- scaleDecimalPlaces 4 <$> choose (0.01, 0.1)
     terms <- choose (1, 240)
-    paymentFreq <- elements [Monthly, Biweekly, Monthly]
-    accrualFreq <- elements [Monthly, Monthly]
+    paymentFreq <- elements [Monthly,Biweekly,Weekly,Daily]
+    accrualFreq <- elements [Monthly,Biweekly,Weekly,Daily]
     startDate <- arbitrary
     graceInterest <- arbitrary `suchThat` (\x -> x < terms && x >= 0)
     gracePrincipal <- arbitrary `suchThat` (\x -> x < terms && x >= 0 && x >= graceInterest)
     commissions <- take 2 <$> listOf (Commission Percentage <$> (scaleDecimalPlaces 2 <$> choose (0, 10)))    
     amortizationType <- elements [PRICE, SAC]
-    return $ LoanQuery amount interest Monthly terms paymentFreq accrualFreq startDate graceInterest gracePrincipal commissions amortizationType
+    paymentDayOfMonth <- choose (1, 28)
+    return $ LoanQuery amount interest Monthly terms paymentFreq accrualFreq startDate graceInterest gracePrincipal commissions amortizationType paymentDayOfMonth
 
 
 -- Helper
