@@ -10,7 +10,7 @@ module LoanApi
 import           Data.Aeson     (FromJSON, ToJSON)
 import           GHC.Generics   (Generic)
 import           LoanCalculator (LoanQuery, LoanQueryResult, asNetValueLoan,
-                                 queryLoan)
+                                 queryLoan, queryLoan', LoanQueryValidationError)
 import           Servant
 
 data NetResult = NetResult
@@ -22,17 +22,27 @@ instance FromJSON NetResult
 instance ToJSON NetResult
 type LoanAPI  = "loan" :>
         (
-                           ReqBody '[JSON] LoanQuery :> Post '[JSON] LoanQueryResult
+                           ReqBody '[JSON] LoanQuery :> Post '[JSON] LoanQueryUnwrappedResult
         :<|> "net" :>   ReqBody '[JSON] LoanQuery :> Post '[JSON] (Maybe NetResult)
         )
 
-handleLoanQuery :: LoanQuery -> LoanQueryResult
-handleLoanQuery = queryLoan
+data LoanQueryUnwrappedResult = LoanQueryUnwrappedResult{
+    response  :: Maybe LoanQueryResult 
+    , errors  :: Maybe [LoanQueryValidationError]
+} deriving (Show, Generic)
+instance FromJSON LoanQueryUnwrappedResult
+instance ToJSON LoanQueryUnwrappedResult
+
+handleLoanQuery :: LoanQuery -> LoanQueryUnwrappedResult
+handleLoanQuery req = case queryLoan' req of 
+    Right result' -> LoanQueryUnwrappedResult { response = Just result', errors = Nothing  }
+    Left errors' ->  LoanQueryUnwrappedResult { errors = Just errors', response = Nothing }
 
 handleNetLoanQuery :: LoanQuery -> Maybe NetResult
 handleNetLoanQuery l = case asNetValueLoan l of
     Just query' -> Just NetResult { query = query', result = queryLoan query' }
     Nothing -> Nothing
+
 loanServer :: Server LoanAPI
 loanServer = loan :<|> loanNet
   where

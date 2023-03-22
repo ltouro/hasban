@@ -1,38 +1,25 @@
 module Main where
 
-import Test.Hspec
-import Test.QuickCheck ( 
-  choose
-  , elements
-  , within
-  , listOf
-  , suchThat
-  , (.||.)
-  , Arbitrary(arbitrary)
-  , Testable( property) 
-  )
+import           Test.Hspec
+import           Test.QuickCheck       (Arbitrary (arbitrary), Property,
+                                        Testable (property), choose, elements,
+                                        listOf, suchThat, within, (.||.))
 
-import LoanCalculator(
-  LoanQuery (..)
-  , Commission (..)
-  , Frequency (..)
-  , LoanQuery
-  , CommissionType(Absolute, Percentage)
-  , AmortizationType(SAC, PRICE)
-  , queryLoan
-  , asNetValueLoan
-  , LoanQueryResult (..)
-  , AmortizationTable (..)
-  , AmortizationTableItem (..)
-  )
+import           LoanCalculator        (AmortizationTable (..),
+                                        AmortizationTableItem (..),
+                                        AmortizationType (PRICE, SAC),
+                                        Commission (..),
+                                        CommissionType (Absolute, Percentage),
+                                        Frequency (..), InterestMode (..),
+                                        LoanQuery (..), LoanQueryResult (..),
+                                        asNetValueLoan, queryLoan)
 
-import Date (
-  Frequency(..)
-  , Date(..) )
-  
+import           Date                  (Date (..), Frequency (..), addTerm)
+import           Test.Hspec.QuickCheck (modifyMaxSuccess)
+
 main :: IO ()
 main = hspec $ describe "loan properties" $ do
-  it "calculates the net value of a loan within an acceptable range" $ do
+  modifyMaxSuccess (const 100) $ it "calculates the net value of a loan within an acceptable range" $ do
     property $ \query ->
       let
         netQuery = asNetValueLoan query
@@ -45,7 +32,7 @@ main = hspec $ describe "loan properties" $ do
         Nothing -> result `shouldBe` Nothing
         Just result' -> result' `shouldSatisfy` (\x -> x >= lowerBound && x <= upperBound)
 
-  it "the remaining principal of a loan ends within an acceptable range" $ do
+  modifyMaxSuccess (const 100) $ it "the remaining principal of a loan ends within an acceptable range" $ do
     property $ \query ->
       let remaining = remainingPrincipal $ last $ paymentItems $ resultSchedule (queryLoan query)
           lowerBound = -0.49
@@ -76,23 +63,30 @@ main = hspec $ describe "loan properties" $ do
           amount = loanAmount query
       in total `shouldSatisfy` (> amount)
 
-
-
 instance Arbitrary LoanQuery where
   arbitrary = do
     amount <- scaleDecimalPlaces 2 <$> choose (1000, 100000)
     interest <- scaleDecimalPlaces 4 <$> choose (0.01, 0.1)
     terms <- choose (1, 240)
-    paymentFreq <- elements [Monthly,Biweekly,Weekly,Daily]
-    accrualFreq <- elements [Monthly,Biweekly,Weekly,Daily]
+    paymentFreq <- elements [Monthly,Biweekly,Weekly,Daily]    
     startDate <- arbitrary
-    graceInterest <- arbitrary `suchThat` (\x -> x < terms && x >= 0)
-    gracePrincipal <- arbitrary `suchThat` (\x -> x < terms && x >= 0 && x >= graceInterest)
-    commissions <- take 2 <$> listOf (Commission Percentage <$> (scaleDecimalPlaces 2 <$> choose (0, 10)))    
+    -- mode <- elements [  ThreeSixtyFiveMonth, ThreeSixtyDay, TwoFiveTwoMonth, TwoFiveTwoDay ]
+    paymentStartDate <- arbitrary  `suchThat` (\x -> startDate <= x && x <= addTerm startDate Yearly 3)
+    maybePaymentStartDate <- elements [Nothing, Just paymentStartDate]
+    gracePeriodt <- arbitrary `suchThat` (\x -> x < terms && x >= 0)
+    commissions <- take 2 <$> listOf (Commission Percentage <$> (scaleDecimalPlaces 2 <$> choose (0, 15)))
     amortizationType <- elements [PRICE, SAC]
-    paymentDayOfMonth <- choose (1, 28)
-    return $ LoanQuery amount interest Monthly terms paymentFreq accrualFreq startDate graceInterest gracePrincipal commissions amortizationType paymentDayOfMonth
-
+    return $ LoanQuery { loanAmount   = amount
+      , interestMode              = ThreeSixtyFiveMonth
+      , interestRate              = interest
+      , loanTerms                 = terms
+      , paymentFrequency          = paymentFreq
+      , startDate                 = startDate
+      , firstIncorporationEvent = maybePaymentStartDate
+      , principalGracePeriodTerms = gracePeriodt
+      , commissions               = commissions
+      , amortizationType          = amortizationType
+      }
 
 -- Helper
 scaleDecimalPlaces :: Int -> Double -> Double

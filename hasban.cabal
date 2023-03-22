@@ -14,6 +14,7 @@ library
     Date   
   other-modules:
     GoalSeek
+    InterestFactor
   build-depends:       base >= 4.7 && < 5
                       , servant
                       , servant-server
