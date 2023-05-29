@@ -2,3 +2,4 @@
 dist-newstyle/*
 .stack-work/stack.sqlite3
 sqlite*
+.vscode/*

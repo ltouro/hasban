@@ -7,6 +7,7 @@ module Date
   , toDate
   , numberOfDays
   , numberOfMonths
+  , daysInMonth
   , formatDate
   , addTerm
   , fixDate
@@ -16,6 +17,7 @@ module Date
   , numberOfWeekdays
   , previousMonthAniversary
   , nextMonthAniversary
+  , isLeapYear
   ) where
 
 import           Data.Aeson         (FromJSON (parseJSON), ToJSON (toJSON),
@@ -131,3 +133,19 @@ nextMonthAniversary (Date year month day) d =
   let nextYear  = if (day > d) && month == 12 then year + 1 else year
       nextMonth = if day > d then if month == 12 then 1 else month + 1 else month
   in Date nextYear nextMonth d
+
+  -- Helper function to get the number of days in a given month
+daysInMonth :: Int -> Int -> Int
+daysInMonth year month
+  | month `elem` [1, 3, 5, 7, 8, 10, 12] = 31
+  | month `elem` [4, 6, 9, 11] = 30
+  | isLeapYear year = 29
+  | otherwise = 28
+
+-- Helper function to check if a year is a leap year
+isLeapYear :: Int -> Bool
+isLeapYear year
+  | year `mod` 400 == 0 = True
+  | year `mod` 100 == 0 = False
+  | year `mod` 4 == 0 = True
+  | otherwise = False

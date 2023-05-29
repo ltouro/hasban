@@ -1,6 +1,9 @@
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# LANGUAGE DeriveGeneric #-}
 
 module InterestFactor (
+  InterestMode(..),
+  InterestRate,
   interestUnitValue
   , interestFactor252BDays
   , interestFactor252Months21
@@ -8,8 +11,14 @@ module InterestFactor (
   , interestRate36XDays
   , interestRate36XMonths
   , interestRate36XMonthsIrregular
+  , interestFactorForPaymentNo
+  , effectiveRate
   , DaysInYear(..)
 ) where
+import           Data.Aeson
+import           Date
+import           Debug.Trace
+import           GHC.Generics
 
 type InterestRate = Double
 type CurrencyAmount = Double
@@ -35,7 +44,7 @@ interestFactor252BDays
   -> BusinessDays -- Número de dias úteis entre a data de emissão e a data de atualização (dup)
   -> InterestRate
 interestFactor252BDays interestRate dut dup = let
-      interestRatePlusOne = (interestRate / 100) + 1
+      interestRatePlusOne = interestRate + 1
       factor1 = fromIntegral dut / 252
       factor2 = fromIntegral dup / fromIntegral dut
     in (interestRatePlusOne ** factor1) ** factor2
@@ -47,7 +56,7 @@ interestFactor252Months21
   -> BusinessDays   -- Número de dias úteis entre a data de emissão e a data de atualização (dup)
   -> InterestRate
 interestFactor252Months21 interestRate months dup = let
-      interestRatePlusOne = (interestRate / 100) + 1
+      interestRatePlusOne = interestRate + 1
       dut = months * 21
       factor1 = fromIntegral dut / 252
       factor2 = fromIntegral dup / fromIntegral dut
@@ -63,7 +72,7 @@ interestFactor252MonthsIrregular
   -> BusinessDays   -- Número de dias úteis entre o 1º aniversário mensal imediatamente posterior à data de emissão e a data de vencimento ou 1º evento de juros posterior ao 1º aniversário mensal, caso não haja incorporação (dut)
   -> InterestRate
 interestFactor252MonthsIrregular interestRate dupProRata dutProRata nMonths dup dut = let
-      r1 = (interestRate / 100) + 1
+      r1 = interestRate + 1
       factor1 = 21 / 252
       factor2 = fromIntegral  dupProRata / fromIntegral dutProRata
       factor3 = fromIntegral nMonths * 21 / 252
@@ -78,14 +87,14 @@ interestRate36XDays :: InterestRate
   -> DaysInYear -- Número de dias no ano
   -> InterestRate
 interestRate36XDays interestRate dct dcp daysInYear = let
-      r1 = (interestRate / 100) + 1 :: Double
+      r1 = interestRate + 1 :: Double
       factor1 = fromIntegral dct / fromIntegral (fromDaysInYear daysInYear) :: Double
       factor2 = fromIntegral  dct / fromIntegral dcp :: Double
-    in r1 ** factor1
+    in r1
 
 -- “360 – Número de meses entre a data de início ou último pagamento e o próximo x 30”,
 -- ou “365 – Número de meses entre a data de início ou último pagamento e o próximo x 30” (data de emissão casada)
-interestRate36XMonths 
+interestRate36XMonths
   :: InterestRate -- Taxa de juros expressa em 360 ou 365 dias corridos, com 4 (quatro) casas decimais
   -> Months       -- Número de meses entre a o último evento de juros e o próximo evento de juros
   -> Days         -- Dias úteis pro-rata - Número de dias corridos entre entre o último evento de juros e o próximo evento de juros (dct)
@@ -93,8 +102,8 @@ interestRate36XMonths
   -> DaysInYear   -- Número de dias no ano
   -> InterestRate
 interestRate36XMonths r months dcp dct daysInYear = let
-      r1 = (r / 100) + 1
-      factor1 = (fromIntegral months * 30) / fromIntegral (fromDaysInYear daysInYear)
+      r1 = r + 1
+      factor1 = (fromIntegral months / 12)
       factor2 = fromIntegral  dcp / fromIntegral dct
     in (r1 ** factor1) ** factor2
 
@@ -108,9 +117,67 @@ interestRate36XMonthsIrregular
   -> DaysInYear   -- Número de dias no ano
   -> InterestRate
 interestRate36XMonthsIrregular r dcpProRata dctProRata months dcp dct daysInYear = let
-      r1 = (r / 100) + 1
+      r1 = r + 1
       factor1 = 30 / fromIntegral (fromDaysInYear daysInYear)
       factor2 = fromIntegral  dcpProRata / fromIntegral dctProRata
       factor3 = (fromIntegral months * 30) / fromIntegral (fromDaysInYear daysInYear)
       factor4 = fromIntegral dcp / fromIntegral dct
     in ((r1 ** factor1) ** factor2) * ((r1 ** factor3) ** factor4)
+
+data InterestMode =
+  ThreeSixtyFiveMonth  -- 365 dias, juros mensal
+  | ThreeSixtyFiveDay  -- 365 dias, juros diário
+  | ThreeSixtyMonth    -- 360 dias, juros mensal
+  | ThreeSixtyDay      -- 360 dias, juros diário
+  | TwoFiveTwoMonth    -- 252 dias (úteis), juros mensal
+  | TwoFiveTwoDay      -- 252 dias (úteis), juros diário
+  deriving (Show, Generic)
+instance FromJSON InterestMode
+instance ToJSON InterestMode
+
+interestFactorForPaymentNo :: InterestMode ->  InterestRate -> Date -> Date -> InterestRate
+interestFactorForPaymentNo ThreeSixtyFiveDay accrualRate previousDate currentDate = let
+  yearlyRate' = yearlyRate ThreeSixtyFiveDay accrualRate
+  days = numberOfDays previousDate currentDate
+  res = interestRate36XDays yearlyRate' days days Days365
+  in
+    trace ("ThreeSixtyFiveDay yearlyRate: " ++ show yearlyRate' ++ " previousDate: " ++ show previousDate ++ " currentDate: " ++ show currentDate ++ " res: " ++ show res) $
+    res
+
+interestFactorForPaymentNo ThreeSixtyFiveMonth accrualRate previousDate currentDate = let
+  yearlyRate' = yearlyRate ThreeSixtyFiveMonth accrualRate
+  days = numberOfDays previousDate currentDate
+  res = interestRate36XMonths yearlyRate' (numberOfMonths previousDate currentDate) days days Days365
+  in
+    trace ("ThreeSixtyFiveMonth yearlyRate: " ++ show yearlyRate' ++ " previousDate: " ++ show previousDate ++ " currentDate: " ++ show currentDate ++ " res: " ++ show res) $
+    res
+
+interestFactorForPaymentNo ThreeSixtyMonth accrualRate previousDate currentDate = let
+  yearlyRate' = yearlyRate ThreeSixtyMonth accrualRate
+  days = numberOfDays previousDate currentDate
+  res = interestRate36XMonths yearlyRate' (numberOfMonths previousDate currentDate) days days Days360
+  in
+    trace ("ThreeSixtyMonth yearlyRate: " ++ show yearlyRate' ++ " previousDate: " ++ show previousDate ++ " currentDate: " ++ show currentDate ++ " res: " ++ show res)
+    res
+
+interestFactorForPaymentNo TwoFiveTwoMonth accrualRate previousDate currentDate = let
+  yearlyRate' = yearlyRate TwoFiveTwoMonth accrualRate
+  days = numberOfDays previousDate currentDate
+  res = interestRate36XMonths yearlyRate' (numberOfMonths previousDate currentDate) days days Days360
+  in
+    trace ("TwoFiveTwoMonth yearlyRate: " ++ show yearlyRate' ++ " previousDate: " ++ show previousDate ++ " currentDate: " ++ show currentDate ++ " res: " ++ show res)
+    res
+
+interestFactorForPaymentNo _ _ _ _ = error "Not implemented"
+
+compositeRate :: InterestRate -> Integer -> InterestRate
+compositeRate r n = ((1 + r) ^ n) - 1
+
+yearlyRate :: InterestMode -> InterestRate -> InterestRate
+yearlyRate ThreeSixtyFiveMonth rate = compositeRate (rate / 30) 365
+yearlyRate _ rate                   = compositeRate rate 12
+
+effectiveRate :: InterestMode -> InterestRate -> InterestRate
+effectiveRate mode rate = let
+      yearlyRate' = yearlyRate mode rate
+    in ((1 + yearlyRate') ** 1/12) - 1

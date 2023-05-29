@@ -14,7 +14,7 @@ import           LoanCalculator        (AmortizationTable (..),
                                         LoanQuery (..), LoanQueryResult (..),
                                         asNetValueLoan, queryLoan)
 
-import           Date                  (Date (..), Frequency (..), addTerm)
+import           Date                  (Date (..), Frequency (..), addTerm, daysInMonth, isLeapYear)
 import           Test.Hspec.QuickCheck (modifyMaxSuccess)
 
 main :: IO ()
@@ -38,14 +38,6 @@ main = hspec $ describe "loan properties" $ do
           lowerBound = -0.49
           upperBound = 0.49
       in remaining `shouldSatisfy` (\x -> x > lowerBound && x < upperBound)
-
-  it "the net value is less than the loan amount" $ do
-    property $ \query ->
-      let
-          res = queryLoan query
-          liq = resultNetValue res
-          amount = loanAmount query
-      in liq `shouldSatisfy` (< amount)
 
   it "the net value is less than the loan amount" $ do
     property $ \query ->
@@ -100,19 +92,3 @@ instance Arbitrary Date.Date where
     month <- choose (1, 12)
     day <- choose (1, daysInMonth year month)
     return $ Date.Date (fromIntegral year) month day
-
--- Helper function to get the number of days in a given month
-daysInMonth :: Int -> Int -> Int
-daysInMonth year month
-  | month `elem` [1, 3, 5, 7, 8, 10, 12] = 31
-  | month `elem` [4, 6, 9, 11] = 30
-  | isLeapYear year = 29
-  | otherwise = 28
-
--- Helper function to check if a year is a leap year
-isLeapYear :: Int -> Bool
-isLeapYear year
-  | year `mod` 400 == 0 = True
-  | year `mod` 100 == 0 = False
-  | year `mod` 4 == 0 = True
-  | otherwise = False

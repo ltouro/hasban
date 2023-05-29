@@ -20,15 +20,19 @@ module LoanCalculator
   , InterestMode(..)
   ) where
 
+
 import           Data.Aeson             (FromJSON, ToJSON)
 import           Data.Maybe             (catMaybes, fromMaybe)
 import           Date                   (Date (..), Frequency (..), addTerm,
-                                         formatDate, numberOfDays, numberOfWeekdays, previousMonthAniversary, day, numberOfMonths)
+                                         day, formatDate, numberOfDays)
+import           Debug.Trace
 import           GHC.Generics           (Generic)
 import           GoalSeek               (goalSeek)
+import           InterestFactor         (InterestMode (..), InterestRate,
+                                         interestFactorForPaymentNo,
+                                         interestUnitValue, effectiveRate)
 import           Text.PrettyPrint.Boxes (hsep, left, render, text, vsep)
 import           Text.Printf            (printf)
-import InterestFactor (interestFactor252MonthsIrregular, interestFactor252BDays, interestRate36XMonthsIrregular, DaysInYear (Days360, Days365), interestRate36XDays, interestUnitValue, interestRate36XMonths, interestFactor252Months21)
 
 data LoanQuery = LoanQuery
   { loanAmount                :: CurrencyAmount
@@ -49,7 +53,7 @@ instance ToJSON LoanQuery
 isRegularMode :: LoanQuery -> Bool
 isRegularMode loan = case firstIncorporationEvent loan of
     Nothing -> True
-    Just d -> day d == day (startDate loan)
+    Just d  -> day d == day (startDate loan)
 
 currentDate :: LoanQuery -> PaymentNo -> Date
 currentDate loan paymentNo'
@@ -60,12 +64,11 @@ currentDate loan paymentNo'
 
 numberOfPayments :: LoanQuery -> PaymentNo
 numberOfPayments loan
-  | firstIncorporationEvent loan /= Nothing = (loanTerms loan) + 1
+  | firstIncorporationEvent loan /= Nothing = loanTerms loan + 1
   | otherwise = loanTerms loan
 
 type PaymentNo = Int
 type CurrencyAmount = Double
-type InterestRate = Double
 
 data AmortizationTableItem = AmortizationTableItem
   { dueDate             :: Date
@@ -107,17 +110,6 @@ data Commission = Commission
 instance FromJSON Commission
 instance ToJSON Commission
 
-data InterestMode =
-  ThreeSixtyFiveMonth  -- 365 dias, juros mensal
-  | ThreeSixtyFiveDay  -- 365 dias, juros diário
-  | ThreeSixtyMonth    -- 365 dias, juros diário
-  | ThreeSixtyDay      -- 360 dias, juros diário
-  | TwoFiveTwoMonth    -- 252 dias (úteis), juros mensal
-  | TwoFiveTwoDay      -- 252 dias (úteis), juros diário
-  deriving (Show, Generic)
-instance FromJSON InterestMode
-instance ToJSON InterestMode
-
 data CommissionType = Absolute | Percentage
   deriving (Show, Generic)
 
@@ -150,27 +142,26 @@ futureValue pv r n = pv * (1 + compositeRate r n)
 compositeRate ∷ InterestRate → PaymentNo → InterestRate
 compositeRate r n = ((1 + r) ^ n) - 1
 
--- -- DR = (1+ r)^ 1 / n - 1
--- decomposeRate ∷ InterestRate → Double → InterestRate
--- decomposeRate r n = ( (1 + r) ** (1 / n) ) - 1
-
 -- This function calculates the variable monthly payment for an SAC amortization schedule
 -- given the loan amount, interest rate, loan term andd balance
 calculatePaymentSac ∷ CurrencyAmount → InterestRate → PaymentNo → CurrencyAmount → Double
 calculatePaymentSac loanAmount' interestRate' loanTerm balance =
   let amortization = loanAmount' / fromIntegral loanTerm
-  in  amortization + (interestRate' / 100) * balance
+      res = amortization + interestRate' * balance
+  in  trace ("pmt sac -  amount" ++ show loanAmount' ++ "terms " ++ show loanTerm ++ " r " ++ show interestRate' ++ " res: " ++ show res) $
+      res
 
 -- This function calculates the fixed monthly payment for an PRICE amortization schedule
 -- given the loan amount, interest rate, and loan term
 calculatePaymentPrice ∷ CurrencyAmount → InterestRate → PaymentNo → Double
-calculatePaymentPrice loanAmount' interestRate' loanTerm =
+calculatePaymentPrice loanAmount' r loanTerm =
   let
     paymentNo' = fromIntegral loanTerm
-    r = interestRate' / 100
-  in  loanAmount'
+    res = loanAmount'
         * futureValue r r paymentNo'
-        / compositeRate interestRate' paymentNo'
+        / compositeRate r paymentNo'
+  in  trace ("pmt -  amount" ++ show loanAmount' ++ "terms " ++ show paymentNo' ++ " r " ++ show r ++ " res: " ++ show res)
+    res
 
 -- Sums the financialTax of every AmortizationTableItem in table
 sumTax ∷ AmortizationTable → Double
@@ -243,22 +234,8 @@ generateAmortizationTable loan = AmortizationTable
         mode = interestMode loan
         previousDate = currentDate loan (paymentNo' - 1)
         currentDate' = currentDate loan paymentNo'
-        -- days = fromIntegral $ numberOfDays previousDate currentDate'
-        months = numberOfMonths previousDate currentDate'
-        dct = numberOfDays previousDate (addTerm previousDate (paymentFrequency loan) 1)
-        dcp = numberOfDays previousDate currentDate'
-      in case mode of
-        ThreeSixtyMonth -> let
-            interestFactor = if isRegularMode loan
-              then interestRate36XMonths yearlyRate months dct dcp Days360
-              else let
-                  baseDateForInterest = addTerm currentDate' (paymentFrequency loan) (negate $ fromIntegral months)
-                  dctProRateAnt = addTerm baseDateForInterest (paymentFrequency loan) (-1)
-                  dctProRata = numberOfDays dctProRateAnt baseDateForInterest
-                  dcpProRata = numberOfDays previousDate baseDateForInterest
-                in interestRate36XMonthsIrregular yearlyRate dcpProRata dctProRata months dcp dct Days360
-            in interestUnitValue remainingPrincipal' interestFactor
-        _ -> error "not implemented"
+        interestFactor = interestFactorForPaymentNo mode accrualRate previousDate currentDate'
+      in trace ("interest factor:" ++ show interestFactor ++ "rate" ++ show accrualRate) $ interestUnitValue remainingPrincipal' interestFactor
 
     -- number of payments where amortization > 0
     numberOfPrincipalPayments = loanTerms loan - principalGracePeriodTerms loan
@@ -268,9 +245,8 @@ generateAmortizationTable loan = AmortizationTable
       | firstIncorporationEvent loan /= Nothing = loanAmount loan + interestForPaymentNo 1 (loanAmount loan)
       | otherwise = loanAmount loan
 
-    -- the rate adjusted to the accrual frequency    
-    accrualRate = interestRate loan
-    yearlyRate = compositeRate (interestRate loan) 12
+    -- the rate adjusted to the accrual frequency
+    accrualRate = interestRate loan / 100
 
     -- Compute the tax for the given payment number in the loan schedule
     tax ∷ PaymentNo → CurrencyAmount → Double
@@ -302,18 +278,19 @@ generateAmortizationTable loan = AmortizationTable
         prevItem = last prevItems
         -- currentPaymentNo = paymentNo prevItem + 1
         balance = remainingPrincipal prevItem
-        payment = pmt paymentNo' balance
+        payment = trace ("balance: " ++ show balance) $ pmt paymentNo' balance
         interest = interestForPaymentNo paymentNo' balance
         dueDate' = currentDate loan paymentNo'
         amort = max 0 (payment - interest)
-      in
+        rmg = (balance + interest - payment)
+      in trace ("paymentNo: " ++ show paymentNo' ++ " balance: " ++ show balance ++ " interest: " ++ show interest ++ " payment: " ++ show payment ++ " amort: " ++ show amort ++ " rmg:" ++ show rmg) $
       prevItems ++ [AmortizationTableItem
       { dueDate              = dueDate'
       , dueAmount            = payment
       , paymentNo            = paymentNo'
       , accruedInterest      = interest
       , paymentAmortization  = max amort 0
-      , remainingPrincipal   = balance + interest - payment
+      , remainingPrincipal   = rmg
       , financialTax         = tax paymentNo' amort
       }]
 
@@ -323,9 +300,11 @@ generateAmortizationTable loan = AmortizationTable
       | paymentNo' <=  principalGracePeriodTerms loan = interestForPaymentNo paymentNo' balance
       | otherwise = payment
       where
+        mode = interestMode loan
+        effetiveRate = effectiveRate mode accrualRate        
         payment = case amortizationType loan of
-          SAC -> calculatePaymentSac initialRemainingPrincipal accrualRate numberOfPrincipalPayments balance
-          PRICE -> calculatePaymentPrice initialRemainingPrincipal accrualRate numberOfPrincipalPayments
+          SAC -> calculatePaymentSac initialRemainingPrincipal effetiveRate numberOfPrincipalPayments balance
+          PRICE -> calculatePaymentPrice initialRemainingPrincipal effetiveRate numberOfPrincipalPayments
 
 -- Calculate the total value of the given list of commissions
 totalCommissionValue ∷ LoanQuery → Double
