@@ -29,8 +29,9 @@ import           Debug.Trace
 import           GHC.Generics           (Generic)
 import           GoalSeek               (goalSeek)
 import           InterestFactor         (InterestMode (..), InterestRate,
+                                         effectiveRate,
                                          interestFactorForPaymentNo,
-                                         interestUnitValue, effectiveRate)
+                                         interestUnitValue)
 import           Text.PrettyPrint.Boxes (hsep, left, render, text, vsep)
 import           Text.Printf            (printf)
 
@@ -40,6 +41,7 @@ data LoanQuery = LoanQuery
   , interestMode              :: InterestMode
   , loanTerms                 :: PaymentNo
   , paymentFrequency          :: Frequency
+  , paymentEveryXDay          :: Maybe PaymentNo
   , startDate                 :: Date
   , firstIncorporationEvent   :: Maybe Date
   , principalGracePeriodTerms :: PaymentNo
@@ -59,8 +61,16 @@ currentDate :: LoanQuery -> PaymentNo -> Date
 currentDate loan paymentNo'
   | paymentNo' == 0 = startDate loan
   | not (isRegularMode loan) && paymentNo' == 1 =
-      fromMaybe (error "not expected") (firstIncorporationEvent loan)
-  | otherwise = addTerm (currentDate loan $ paymentNo' - 1) (paymentFrequency loan) 1
+      fromMaybe (error "firstIncorporationEvent must be set") (firstIncorporationEvent loan)
+  | otherwise = addTerm (currentDate loan $ paymentNo' - 1) (paymentFrequency loan) (numberOfTerms loan)
+
+numberOfTerms :: LoanQuery -> PaymentNo
+numberOfTerms loan = let
+    freq = paymentFrequency loan
+    every = paymentEveryXDay loan
+    in case freq of 
+      EveryXDays -> fromMaybe (error "paymentEveryXDay must be set") every
+      _ -> 1
 
 numberOfPayments :: LoanQuery -> PaymentNo
 numberOfPayments loan
@@ -130,6 +140,8 @@ data LoanQueryValidationError =
   | InvalidPaymentNo
   | InvalidCommission
   | InvalidAmount
+  | InvalidFrequency
+  | InvalidPaymentEveryXDay
   deriving (Show, Generic)
 instance FromJSON LoanQueryValidationError
 instance ToJSON LoanQueryValidationError
@@ -160,7 +172,7 @@ calculatePaymentPrice loanAmount' r loanTerm =
     res = loanAmount'
         * futureValue r r paymentNo'
         / compositeRate r paymentNo'
-  in  trace ("pmt -  amount" ++ show loanAmount' ++ "terms " ++ show paymentNo' ++ " r " ++ show r ++ " res: " ++ show res)
+  in  trace ("pmt - amount: " ++ show loanAmount' ++ " terms: " ++ show paymentNo' ++ " r " ++ show r ++ " res: " ++ show res)
     res
 
 -- Sums the financialTax of every AmortizationTableItem in table
@@ -183,6 +195,8 @@ validateLoan loan = let
       , checkInvalidInterestRate
       , checkInvalidPaymentNo
       , checkInvalidComission
+      , checkPaymentEveryXDays
+      , checkPaymentFrequency
       ]
     checkPaymentStartDate
       | startDate loan < fromMaybe (startDate loan) (firstIncorporationEvent loan) = Just InvalidStartDate
@@ -203,6 +217,15 @@ validateLoan loan = let
     checkInvalidAmount
       | loanAmount loan <= 1 = Just InvalidAmount
       | otherwise = Nothing
+    checkPaymentEveryXDays
+      | paymentFrequency loan == EveryXDays = case paymentEveryXDay loan of 
+          Nothing -> Just InvalidPaymentEveryXDay
+          Just everyXDay -> if everyXDay >= 0 then Nothing else Just InvalidPaymentEveryXDay          
+      | otherwise = Nothing
+    checkPaymentFrequency
+      | interestMode loan `elem` [ThreeSixtyDay, ThreeSixtyFiveDay, TwoFiveTwoDay] 
+        && paymentFrequency loan `notElem` [Biweekly, Weekly, Daily, EveryXDays] = Just InvalidFrequency
+      | otherwise = Nothing  
   in if null errors then Right loan else Left errors
 
 queryLoan' ∷ LoanQuery → Either [LoanQueryValidationError] LoanQueryResult
@@ -235,7 +258,9 @@ generateAmortizationTable loan = AmortizationTable
         previousDate = currentDate loan (paymentNo' - 1)
         currentDate' = currentDate loan paymentNo'
         interestFactor = interestFactorForPaymentNo mode accrualRate previousDate currentDate'
-      in trace ("interest factor:" ++ show interestFactor ++ "rate" ++ show accrualRate) $ interestUnitValue remainingPrincipal' interestFactor
+        interest = interestUnitValue remainingPrincipal' interestFactor
+      in trace ("interest factor: " ++ show interestFactor ++ " for accrual rate" ++ show accrualRate ++ " res:" ++ show interest)
+        interest
 
     -- number of payments where amortization > 0
     numberOfPrincipalPayments = loanTerms loan - principalGracePeriodTerms loan
@@ -276,13 +301,12 @@ generateAmortizationTable loan = AmortizationTable
     itemsForPaymentNo prevItems paymentNo' =
       let
         prevItem = last prevItems
-        -- currentPaymentNo = paymentNo prevItem + 1
         balance = remainingPrincipal prevItem
-        payment = trace ("balance: " ++ show balance) $ pmt paymentNo' balance
+        payment = pmt paymentNo' balance
         interest = interestForPaymentNo paymentNo' balance
         dueDate' = currentDate loan paymentNo'
         amort = max 0 (payment - interest)
-        rmg = (balance + interest - payment)
+        rmg = balance + interest - payment
       in trace ("paymentNo: " ++ show paymentNo' ++ " balance: " ++ show balance ++ " interest: " ++ show interest ++ " payment: " ++ show payment ++ " amort: " ++ show amort ++ " rmg:" ++ show rmg) $
       prevItems ++ [AmortizationTableItem
       { dueDate              = dueDate'
@@ -301,10 +325,10 @@ generateAmortizationTable loan = AmortizationTable
       | otherwise = payment
       where
         mode = interestMode loan
-        effetiveRate = effectiveRate mode accrualRate        
+        effetiveRate' = trace ("effetive Rate: " ++ show (effectiveRate mode accrualRate)) $ effectiveRate mode accrualRate
         payment = case amortizationType loan of
-          SAC -> calculatePaymentSac initialRemainingPrincipal effetiveRate numberOfPrincipalPayments balance
-          PRICE -> calculatePaymentPrice initialRemainingPrincipal effetiveRate numberOfPrincipalPayments
+          SAC -> calculatePaymentSac initialRemainingPrincipal effetiveRate' numberOfPrincipalPayments balance
+          PRICE -> calculatePaymentPrice initialRemainingPrincipal effetiveRate' numberOfPrincipalPayments
 
 -- Calculate the total value of the given list of commissions
 totalCommissionValue ∷ LoanQuery → Double

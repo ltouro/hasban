@@ -1,5 +1,6 @@
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# OPTIONS_GHC -Wno-type-defaults #-}
 
 module InterestFactor (
   InterestMode(..),
@@ -14,6 +15,7 @@ module InterestFactor (
   , interestFactorForPaymentNo
   , effectiveRate
   , DaysInYear(..)
+  , round'
 ) where
 import           Data.Aeson
 import           Date
@@ -33,9 +35,14 @@ fromDaysInYear d = case d of
     Days360 -> 360
     Days365 -> 365
 
+-- x : number you want rounded, n : number of decimal places you want...
+round' :: Double -> Integer -> Double
+round' num sg = (fromIntegral . round $ num * f) / f
+    where f = 10^sg
+
 -- Valor unitário dos juros acumulados no período, calculado com 8 (oito) casas decimais
 interestUnitValue :: CurrencyAmount -> InterestRate -> CurrencyAmount
-interestUnitValue nominalValue interestFactor = nominalValue * (interestFactor - 1)
+interestUnitValue nominalValue interestFactor = round' (nominalValue * interestFactor) 8
 
 -- 252 – número de dias úteis entre a data de início ou do último pagamento e o próximo
 interestFactor252BDays
@@ -131,53 +138,53 @@ data InterestMode =
   | ThreeSixtyDay      -- 360 dias, juros diário
   | TwoFiveTwoMonth    -- 252 dias (úteis), juros mensal
   | TwoFiveTwoDay      -- 252 dias (úteis), juros diário
-  deriving (Show, Generic)
+  deriving (Show, Generic, Eq)
 instance FromJSON InterestMode
 instance ToJSON InterestMode
 
 interestFactorForPaymentNo :: InterestMode ->  InterestRate -> Date -> Date -> InterestRate
-interestFactorForPaymentNo ThreeSixtyFiveDay accrualRate previousDate currentDate = let
-  yearlyRate' = yearlyRate ThreeSixtyFiveDay accrualRate
-  days = numberOfDays previousDate currentDate
-  res = interestRate36XDays yearlyRate' days days Days365
-  in
-    trace ("ThreeSixtyFiveDay yearlyRate: " ++ show yearlyRate' ++ " previousDate: " ++ show previousDate ++ " currentDate: " ++ show currentDate ++ " res: " ++ show res) $
-    res
-
-interestFactorForPaymentNo ThreeSixtyFiveMonth accrualRate previousDate currentDate = let
-  yearlyRate' = yearlyRate ThreeSixtyFiveMonth accrualRate
-  days = numberOfDays previousDate currentDate
-  res = interestRate36XMonths yearlyRate' (numberOfMonths previousDate currentDate) days days Days365
-  in
-    trace ("ThreeSixtyFiveMonth yearlyRate: " ++ show yearlyRate' ++ " previousDate: " ++ show previousDate ++ " currentDate: " ++ show currentDate ++ " res: " ++ show res) $
-    res
-
-interestFactorForPaymentNo ThreeSixtyMonth accrualRate previousDate currentDate = let
-  yearlyRate' = yearlyRate ThreeSixtyMonth accrualRate
-  days = numberOfDays previousDate currentDate
-  res = interestRate36XMonths yearlyRate' (numberOfMonths previousDate currentDate) days days Days360
-  in
-    trace ("ThreeSixtyMonth yearlyRate: " ++ show yearlyRate' ++ " previousDate: " ++ show previousDate ++ " currentDate: " ++ show currentDate ++ " res: " ++ show res)
-    res
-
-interestFactorForPaymentNo TwoFiveTwoMonth accrualRate previousDate currentDate = let
-  yearlyRate' = yearlyRate TwoFiveTwoMonth accrualRate
-  days = numberOfDays previousDate currentDate
-  res = interestRate36XMonths yearlyRate' (numberOfMonths previousDate currentDate) days days Days360
-  in
-    trace ("TwoFiveTwoMonth yearlyRate: " ++ show yearlyRate' ++ " previousDate: " ++ show previousDate ++ " currentDate: " ++ show currentDate ++ " res: " ++ show res)
-    res
-
-interestFactorForPaymentNo _ _ _ _ = error "Not implemented"
+interestFactorForPaymentNo ThreeSixtyFiveMonth accrualRate previousDate currentDate = defaultMonthHandler ThreeSixtyFiveMonth accrualRate previousDate currentDate
+interestFactorForPaymentNo ThreeSixtyMonth accrualRate previousDate currentDate = defaultMonthHandler ThreeSixtyMonth accrualRate previousDate currentDate
+interestFactorForPaymentNo TwoFiveTwoMonth accrualRate previousDate currentDate = defaultMonthHandler TwoFiveTwoMonth accrualRate previousDate currentDate
+interestFactorForPaymentNo ThreeSixtyFiveDay accrualRate previousDate currentDate = defaultDayHandler ThreeSixtyFiveDay accrualRate previousDate currentDate
+interestFactorForPaymentNo ThreeSixtyDay accrualRate previousDate currentDate = defaultDayHandler ThreeSixtyDay accrualRate previousDate currentDate
+interestFactorForPaymentNo TwoFiveTwoDay accrualRate previousDate currentDate = defaultDayHandler TwoFiveTwoDay accrualRate previousDate currentDate
 
 compositeRate :: InterestRate -> Integer -> InterestRate
 compositeRate r n = ((1 + r) ^ n) - 1
 
 yearlyRate :: InterestMode -> InterestRate -> InterestRate
 yearlyRate ThreeSixtyFiveMonth rate = compositeRate (rate / 30) 365
+yearlyRate ThreeSixtyFiveDay rate   = compositeRate (rate / 30) 365
 yearlyRate _ rate                   = compositeRate rate 12
 
 effectiveRate :: InterestMode -> InterestRate -> InterestRate
 effectiveRate mode rate = let
       yearlyRate' = yearlyRate mode rate
-    in ((1 + yearlyRate') ** 1/12) - 1
+    in ((1 + yearlyRate') ** (1/12)) - 1
+
+dailyRate :: InterestMode -> InterestRate -> InterestRate
+dailyRate ThreeSixtyFiveDay rate = compositeRate (rate / 30) 1
+dailyRate TwoFiveTwoDay rate = ((1 + yearlyRate ThreeSixtyFiveDay rate) ** (1/252)) - 1
+dailyRate ThreeSixtyDay rate = ((1 + rate) ** (1 / 30)) - 1
+dailyRate ThreeSixtyFiveMonth _ = error "Not implemented"
+dailyRate ThreeSixtyMonth _ = error "Not implemented"
+dailyRate TwoFiveTwoMonth _ = error "Not implemented"
+
+defaultMonthHandler :: InterestMode -> InterestRate -> Date -> Date -> InterestRate
+defaultMonthHandler mode accrualRate previousDate currentDate = let
+  terms = numberOfMonths previousDate currentDate
+  rate = effectiveRate mode accrualRate
+  res =  rate ^ terms
+  in
+    trace ("monthly interest - effective rate: " ++ show rate ++ " terms: " ++ show terms  ++ " previousDate: " ++ show previousDate ++ " currentDate: " ++ show currentDate ++ " res: " ++ show res) $
+    res
+
+defaultDayHandler :: InterestMode -> InterestRate -> Date -> Date -> InterestRate
+defaultDayHandler mode accrualRate previousDate currentDate = let
+  terms = numberOfDays previousDate currentDate
+  rate = dailyRate mode accrualRate
+  res = ((1 + rate) ^ terms) - 1
+  in
+    trace ("daily interest - effective rate: " ++ show rate ++ " terms: " ++ show terms  ++ " previousDate: " ++ show previousDate ++ " currentDate: " ++ show currentDate ++ " res: " ++ show res) $
+    res
