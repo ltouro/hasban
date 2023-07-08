@@ -1,0 +1,63 @@
+cabal-version:       2.4
+
+name:                hasban
+version:             0.1.0.0
+license:             NONE
+license-file:        LICENSE
+extra-source-files:  CHANGELOG.md
+
+library
+  hs-source-dirs:      src
+  exposed-modules:            
+    LoanApi
+    LoanCalculator
+    Date   
+  other-modules:
+    GoalSeek
+    InterestFactor
+  build-depends:       base >= 4.7 && < 5
+                      , servant
+                      , servant-server
+                      , text
+                      , aeson     
+                      , bytestring
+                      , mtl
+                      , time
+                      , boxes
+                      , monad-logger
+                      , attoparsec
+  default-language:    Haskell2010
+  ghc-options: -Wall
+
+executable hasban
+  hs-source-dirs:      app
+  main-is:             Main.hs
+  default-language:    Haskell2010
+  build-depends:       base >= 4.7 && < 5
+                      , servant
+                      , servant-server
+                      , aeson     
+                      , hasban
+                      , mtl
+                      , wai
+                      , wai-logger
+                      , monad-logger
+                      , warp
+                      , text
+                      , bytestring
+                      , attoparsec
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+
+
+test-suite spec-test
+  type: exitcode-stdio-1.0
+  main-is: SpecTest.hs
+  hs-source-dirs:
+      test
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      hasban
+    , base >=4.7 && <5
+    , hspec
+    , QuickCheck
+  default-language: Haskell2010
