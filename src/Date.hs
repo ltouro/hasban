@@ -14,6 +14,7 @@ module Date
   , month
   , year
   , isLeapYear
+  , dateToDay
   ) where
 
 import           Data.Aeson                  (FromJSON (parseJSON),

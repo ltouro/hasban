@@ -68,9 +68,11 @@ Result in JSON:
 {
     "errors": null,
     "response": {
-        "finalPrincipal": -8.077449820120819e-9,
         "resultCommissions": 5689.0340883980825,
+        "resultFinalPrincipal": -8.077449820120819e-9,
         "resultInterest": 142.31276339,
+        "resultMonthlyEffectiveRate": 4.614135584518442,
+        "resultMonthlyNominalRate": 8.96e-2,
         "resultNetValue": 18387.917387434853,
         "resultSchedule": {
             "paymentItems": [
@@ -202,9 +204,11 @@ Result in JSON:
                 }
             ]
         },
+        "resultStartPrincipal": 24395.5149588254,
         "resultTax": 318.56348299246554,
         "resultTotalPayment": 24537.82772222349,
-        "startPrincipal": 24395.5149588254
+        "resultYearlyEffectiveRate": 71.82424746024259,
+        "resultYearlyNominalRate": 1.0805144426581315
     }
 }
 ```
@@ -217,9 +221,11 @@ Net Loan Result
     "result": {
         "errors": null,
         "response": {
-            "finalPrincipal": 1.412126948707737e-8,
             "resultCommissions": 7547.723501209128,
+            "resultFinalPrincipal": 1.412126948707737e-8,
             "resultInterest": 188.80839387,
+            "resultMonthlyEffectiveRate": 4.614135584518442,
+            "resultMonthlyNominalRate": 8.96e-2,
             "resultNetValue": 24395.514958588596,
             "resultSchedule": {
                 "paymentItems": [
@@ -351,9 +357,11 @@ Net Loan Result
                     }
                 ]
             },
+            "resultStartPrincipal": 32365.881223023705,
             "resultTax": 422.64276322597914,
             "resultTotalPayment": 32554.689616879583,
-            "startPrincipal": 32365.881223023705
+            "resultYearlyEffectiveRate": 71.82424746024259,
+            "resultYearlyNominalRate": 1.0805144426581315
         }
     }
 }

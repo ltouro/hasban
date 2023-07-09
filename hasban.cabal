@@ -12,6 +12,7 @@ library
     LoanApi
     LoanCalculator
     Date   
+    IRR
   other-modules:
     GoalSeek
     InterestFactor

@@ -38,7 +38,8 @@ import           InterestFactor         (InterestMode (..),
                                          InterestPeriod (Day, Month),
                                          InterestRate,
                                          interestFactorForPaymentNo,
-                                         interestUnitValue)
+                                         interestUnitValue, yearlyRate)
+import           IRR                    (calculateIrr)
 import           Text.PrettyPrint.Boxes (hsep, left, render, text, vsep)
 import           Text.Printf            (printf)
 
@@ -59,6 +60,9 @@ data LoanQuery = LoanQuery
   deriving (Show, Generic)
 instance FromJSON LoanQuery
 instance ToJSON LoanQuery
+
+interestRatePct :: LoanQuery -> InterestRate
+interestRatePct l = interestRate l / 100.00
 
 isRegular :: LoanQuery -> Bool
 isRegular loan = case (startDate loan, firstIncorporationEvent loan) of
@@ -115,14 +119,18 @@ instance FromJSON AmortizationTable
 instance ToJSON AmortizationTable
 
 data LoanQueryResult = LoanQueryResult
-  { resultSchedule     :: AmortizationTable
-  , resultNetValue     :: CurrencyAmount
-  , resultTax          :: CurrencyAmount
-  , startPrincipal     :: CurrencyAmount
-  , finalPrincipal     :: CurrencyAmount
-  , resultInterest     :: CurrencyAmount
-  , resultTotalPayment :: CurrencyAmount
-  , resultCommissions  :: CurrencyAmount
+  { resultSchedule               :: AmortizationTable
+  , resultNetValue               :: CurrencyAmount
+  , resultTax                    :: CurrencyAmount
+  , resultStartPrincipal         :: CurrencyAmount
+  , resultFinalPrincipal         :: CurrencyAmount
+  , resultInterest               :: CurrencyAmount
+  , resultTotalPayment           :: CurrencyAmount
+  , resultCommissions            :: CurrencyAmount
+  , resultYearlyEffectiveRate    :: InterestRate
+  , resultMonthlyEffectiveRate   :: InterestRate
+  , resultMonthlyNominalRate     :: InterestRate
+  , resultYearlyNominalRate      :: InterestRate
   }
   deriving (Eq, Read, Generic)
 instance FromJSON LoanQueryResult
@@ -226,7 +234,7 @@ interestForPaymentNo loan paymentNo' remainingPrincipal' =
   let
     mode = interestMode loan
     terms = numberOfTerms loan paymentNo'
-    interestFactor = interestFactorForPaymentNo mode (interestRate loan / 100) terms
+    interestFactor = interestFactorForPaymentNo mode (interestRatePct loan) terms
     interest = interestUnitValue remainingPrincipal' interestFactor
   in
     interest
@@ -277,7 +285,7 @@ fixedPayment loan = case amortizationType loan of
       PRICE -> let
         terms = numberOfTerms loan (initialPaymentCount loan)
         mode = interestMode loan
-        interestFactor = interestFactorForPaymentNo mode (interestRate loan / 100) terms
+        interestFactor = interestFactorForPaymentNo mode (interestRatePct loan) terms
         in calculatePaymentPrice (initialRemainingPrincipal loan) interestFactor (numberOfPrincipalPayments loan)
 
 validateLoan ∷ LoanQuery → Either [LoanQueryValidationError] LoanQuery
@@ -344,7 +352,7 @@ paymentItem (FirstIncorporationPayment loan) = AmortizationTableItem {
       , dueAmount           = 0
       , financialTax        = 0
       }
-paymentItem (RegularPayment loan prevItem) = let        
+paymentItem (RegularPayment loan prevItem) = let
         paymentNo' = paymentNo prevItem + 1
         balance = remainingPrincipal prevItem
         payment = pmt loan paymentNo' balance
@@ -378,15 +386,24 @@ summary' :: (LoanQuery, [AmortizationTableItem]) -> LoanQueryResult
 summary' (loan, items) = let
   accumulate field = foldr (\p acc -> acc + field p) 0 items
   table = AmortizationTable { paymentItems = items }
+  payments = filter (\i -> dueAmount i > 0) items
+  netValue' = netValue loan table
+  cashflow = (startDate loan, -netValue') : map (\item -> (dueDate item, dueAmount item)) payments
+  irr = fromMaybe 0 (calculateIrr cashflow)
+  mirr = ((1 + irr) ** (1/12)) - 1
   in  LoanQueryResult
-        { resultSchedule      = table
-        , resultNetValue      = netValue loan table
-        , resultTax           = accumulate financialTax
-        , startPrincipal      = remainingPrincipal (head items)
-        , finalPrincipal      = remainingPrincipal (last items)
-        , resultInterest      = accumulate accruedInterest
-        , resultTotalPayment  = accumulate dueAmount
-        , resultCommissions   = totalCommissionValue loan
+        { resultSchedule              = table
+        , resultNetValue              = netValue'
+        , resultTax                   = accumulate financialTax
+        , resultStartPrincipal        = remainingPrincipal (head items)
+        , resultFinalPrincipal        = remainingPrincipal (last items)
+        , resultInterest              = accumulate accruedInterest
+        , resultTotalPayment          = accumulate dueAmount
+        , resultCommissions           = totalCommissionValue loan
+        , resultYearlyEffectiveRate   = irr * 100
+        , resultMonthlyEffectiveRate  = mirr * 100
+        , resultYearlyNominalRate     = yearlyRate (interestMode loan) (interestRatePct loan) * 100
+        , resultMonthlyNominalRate    = interestRate loan
         }
 
 -- Calculate the total value of the given list of commissions
@@ -426,15 +443,22 @@ formatNumber = printf "%10.2f"
 formatCurrency ∷ Double → String
 formatCurrency num = "R$ " ++ formatNumber num
 
+formatPercent ∷ Double → String
+formatPercent num  = " " ++ printf "%10.6f" num ++ " %"
+
 instance Show LoanQueryResult where
   show result =
     let table = show (resultSchedule result)
     in  table
           ++ "\n "
           ++ "\nInitialAmount:  "
-          ++ formatCurrency (startPrincipal result)
+          ++ formatCurrency (resultStartPrincipal result)
           ++ "\nFinalAmount:    "
-          ++ formatCurrency (finalPrincipal result)
+          ++ formatCurrency (resultFinalPrincipal result)          
+          ++ "\nIRR:            "
+          ++ formatPercent (resultYearlyEffectiveRate result)
+          ++ "\nMonthly IRR:    "
+          ++ formatPercent (resultMonthlyEffectiveRate result)
           ++ "\nTax:            "
           ++ formatCurrency (resultTax result)
           ++ "\nCommissions:    "

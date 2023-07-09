@@ -11,11 +11,13 @@ module InterestFactor (
   , DaysInYear(..)
   , round'
   , InterestPeriod(..)
+  , yearlyRate
 ) where
 import           Data.Aeson
 import           GHC.Generics
 
 type InterestRate = Double
+
 type CurrencyAmount = Double
 type PaymentNo = Integer
 data InterestPeriod = Day | Month;
