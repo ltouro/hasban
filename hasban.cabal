@@ -9,12 +9,7 @@ extra-source-files:  CHANGELOG.md
 library
   hs-source-dirs:      src
   exposed-modules:            
-    -- Legacy modules (for backward compatibility during migration)
-    LoanApi
-    LoanCalculator
-    Date   
-    IRR
-    -- New domain modules
+    -- Domain modules
     Domain.Types
     Domain.Loan
     Domain.AmortizationSchedule
@@ -22,11 +17,13 @@ library
     -- Infrastructure modules
     Infrastructure.DateCalculator
     Infrastructure.InterestCalculator
+    Infrastructure.GoalSeeker
+    Infrastructure.IRRCalculator
     -- Application modules
     Application.Errors
-  other-modules:
-    GoalSeek
-    InterestFactor
+    Application.LoanService
+    -- API modules
+    Api.LoanApi
   build-depends:       base >= 4.7 && < 5
                       , servant
                       , servant-server

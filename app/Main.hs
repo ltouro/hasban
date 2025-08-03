@@ -14,7 +14,7 @@ module Main where
 import           Control.Monad.IO.Class   (liftIO)
 import           Control.Monad.Logger     (NoLoggingT (..), runStderrLoggingT)
 import           GHC.Generics
-import           LoanApi                  (LoanAPI, loanServer)
+import           Api.LoanApi              (LoanAPI, loanServer)
 import           Network.Wai
 import           Network.Wai.Handler.Warp
 import           Network.Wai.Logger       (withStdoutLogger)
@@ -28,10 +28,13 @@ mainApi = Proxy
 app :: Application
 app = serve mainApi loanServer
 
-
 main :: IO ()
 main = do
-    _ <- putStrLn "LoanCalculator API started on port 8081"
+    _ <- putStrLn "Hasban API v2.0 - Refactored Architecture"
+    _ <- putStrLn "Brazilian Loan Calculator API started on port 8081"
+    _ <- putStrLn "Available endpoints:"
+    _ <- putStrLn "  POST /loan     - Calculate amortization schedule"
+    _ <- putStrLn "  POST /loan/net - Calculate net value loan"
     withStdoutLogger $ \aplogger -> do
         let settings = setPort 8081 $ setLogger aplogger defaultSettings
         runSettings settings app
