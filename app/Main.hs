@@ -14,19 +14,19 @@ module Main where
 import           Control.Monad.IO.Class   (liftIO)
 import           Control.Monad.Logger     (NoLoggingT (..), runStderrLoggingT)
 import           GHC.Generics
-import           LoanApi                  (LoanAPI, loanServer)
+import           LoanApi                  (HasbanAPI, hasbanServer)
 import           Network.Wai
 import           Network.Wai.Handler.Warp
 import           Network.Wai.Logger       (withStdoutLogger)
 import           Servant
 
-type API = LoanAPI
+type API = HasbanAPI
 
 mainApi :: Proxy API
 mainApi = Proxy
 
 app :: Application
-app = serve mainApi loanServer
+app = serve mainApi hasbanServer
 
 
 main :: IO ()

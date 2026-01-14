@@ -41,8 +41,9 @@ data Frequency =
   Weekly |
   Daily |
   Yearly |
-  EveryXDays 
-  deriving (Enum, Show, Generic, Eq)
+  EveryXDays |      -- Default to daily if no custom days
+  CustomDays Int    -- Custom number of days between payments
+  deriving (Show, Generic, Eq)
 instance FromJSON Frequency
 instance ToJSON Frequency
 
@@ -112,7 +113,9 @@ addTerm (Date year month day) paymentFrequency' numPeriods =
         Yearly   -> addGregorianYearsClip (fromIntegral numPeriods) current
         Biweekly -> addDays (fromIntegral numPeriods * 14) current
         Weekly   -> addDays (fromIntegral numPeriods * 7) current
-        _    -> addDays (fromIntegral numPeriods) current
+        Daily    -> addDays (fromIntegral numPeriods) current
+        EveryXDays -> addDays (fromIntegral numPeriods) current
+        CustomDays n -> addDays (fromIntegral numPeriods * fromIntegral n) current
   in  toDate $ toGregorian next
 
 fixDate :: Date -> Int -> Date

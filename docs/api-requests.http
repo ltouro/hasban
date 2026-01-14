@@ -1,0 +1,359 @@
+### Hasban API Requests
+### Base URL: http://localhost:8081
+### Start server with: stack exec hasban
+
+@baseUrl = http://localhost:8081/hasban
+
+###############################################################################
+# PERSONAL LOAN ENDPOINT
+###############################################################################
+
+### Basic Price Amortization (Monthly)
+POST {{baseUrl}}/personal
+Content-Type: application/json
+
+{
+  "principal": 100000,
+  "annual_rate": 0.12,
+  "terms": 12,
+  "start_year": 2024,
+  "start_month": 1,
+  "start_day": 15,
+  "amortization": "price",
+  "frequency": "monthly"
+}
+
+### SAC Amortization
+POST {{baseUrl}}/personal
+Content-Type: application/json
+
+{
+  "principal": 100000,
+  "annual_rate": 0.12,
+  "terms": 12,
+  "start_year": 2024,
+  "start_month": 1,
+  "start_day": 15,
+  "amortization": "sac",
+  "frequency": "monthly"
+}
+
+### Bullet Loan
+POST {{baseUrl}}/personal
+Content-Type: application/json
+
+{
+  "principal": 50000,
+  "annual_rate": 0.10,
+  "terms": 6,
+  "start_year": 2024,
+  "start_month": 3,
+  "start_day": 1,
+  "amortization": "bullet",
+  "frequency": "monthly"
+}
+
+### With Fixed Fee
+POST {{baseUrl}}/personal
+Content-Type: application/json
+
+{
+  "principal": 100000,
+  "annual_rate": 0.12,
+  "terms": 12,
+  "start_year": 2024,
+  "start_month": 1,
+  "start_day": 15,
+  "amortization": "price",
+  "frequency": "monthly",
+  "fees": [
+    {"type": "fixed", "value": 500}
+  ]
+}
+
+### With Percentage Fee
+POST {{baseUrl}}/personal
+Content-Type: application/json
+
+{
+  "principal": 100000,
+  "annual_rate": 0.12,
+  "terms": 12,
+  "start_year": 2024,
+  "start_month": 1,
+  "start_day": 15,
+  "amortization": "price",
+  "frequency": "monthly",
+  "fees": [
+    {"type": "percentage", "value": 0.02}
+  ]
+}
+
+### With Multiple Fees
+POST {{baseUrl}}/personal
+Content-Type: application/json
+
+{
+  "principal": 100000,
+  "annual_rate": 0.12,
+  "terms": 12,
+  "start_year": 2024,
+  "start_month": 1,
+  "start_day": 15,
+  "amortization": "price",
+  "frequency": "monthly",
+  "fees": [
+    {"type": "fixed", "value": 200},
+    {"type": "percentage", "value": 0.02}
+  ]
+}
+
+### With Grace Period (Capitalize Interest)
+POST {{baseUrl}}/personal
+Content-Type: application/json
+
+{
+  "principal": 100000,
+  "annual_rate": 0.12,
+  "terms": 12,
+  "start_year": 2024,
+  "start_month": 1,
+  "start_day": 15,
+  "amortization": "price",
+  "frequency": "monthly",
+  "grace_period": {
+    "terms": 3,
+    "capitalize": true
+  }
+}
+
+### With Grace Period (No Capitalize)
+POST {{baseUrl}}/personal
+Content-Type: application/json
+
+{
+  "principal": 100000,
+  "annual_rate": 0.12,
+  "terms": 12,
+  "start_year": 2024,
+  "start_month": 1,
+  "start_day": 15,
+  "amortization": "price",
+  "frequency": "monthly",
+  "grace_period": {
+    "terms": 3,
+    "capitalize": false
+  }
+}
+
+### Weekly Frequency
+POST {{baseUrl}}/personal
+Content-Type: application/json
+
+{
+  "principal": 10000,
+  "annual_rate": 0.15,
+  "terms": 52,
+  "start_year": 2024,
+  "start_month": 1,
+  "start_day": 1,
+  "amortization": "price",
+  "frequency": "weekly"
+}
+
+### Biweekly Frequency
+POST {{baseUrl}}/personal
+Content-Type: application/json
+
+{
+  "principal": 10000,
+  "annual_rate": 0.12,
+  "terms": 26,
+  "start_year": 2024,
+  "start_month": 1,
+  "start_day": 1,
+  "amortization": "price",
+  "frequency": "biweekly"
+}
+
+### Yearly Frequency
+POST {{baseUrl}}/personal
+Content-Type: application/json
+
+{
+  "principal": 100000,
+  "annual_rate": 0.08,
+  "terms": 5,
+  "start_year": 2024,
+  "start_month": 1,
+  "start_day": 1,
+  "amortization": "price",
+  "frequency": "yearly"
+}
+
+### Validation Error - Invalid Principal
+POST {{baseUrl}}/personal
+Content-Type: application/json
+
+{
+  "principal": -100,
+  "annual_rate": 0.12,
+  "terms": 12,
+  "start_year": 2024,
+  "start_month": 1,
+  "start_day": 15,
+  "amortization": "price",
+  "frequency": "monthly"
+}
+
+###############################################################################
+# CREDIT CARD ENDPOINT
+###############################################################################
+
+### Fixed Minimum Payment
+POST {{baseUrl}}/creditcard
+Content-Type: application/json
+
+{
+  "balance": 5000,
+  "annual_rate": 0.22,
+  "min_type": "fixed",
+  "min_fixed": 100
+}
+
+### Percentage Minimum Payment
+POST {{baseUrl}}/creditcard
+Content-Type: application/json
+
+{
+  "balance": 5000,
+  "annual_rate": 0.22,
+  "min_type": "percent",
+  "min_percent": 0.02
+}
+
+### Greater Of (Fixed vs Percent)
+POST {{baseUrl}}/creditcard
+Content-Type: application/json
+
+{
+  "balance": 5000,
+  "annual_rate": 0.22,
+  "min_type": "greater_of",
+  "min_fixed": 50,
+  "min_percent": 0.02
+}
+
+### High Balance (Unpayable Scenario)
+# Note: payoff_months will be null because min payment < monthly interest
+POST {{baseUrl}}/creditcard
+Content-Type: application/json
+
+{
+  "balance": 25000,
+  "annual_rate": 0.25,
+  "min_type": "percent",
+  "min_percent": 0.02
+}
+
+### Low Balance
+POST {{baseUrl}}/creditcard
+Content-Type: application/json
+
+{
+  "balance": 500,
+  "annual_rate": 0.18,
+  "min_type": "fixed",
+  "min_fixed": 25
+}
+
+### Validation Error - Invalid Min Type
+POST {{baseUrl}}/creditcard
+Content-Type: application/json
+
+{
+  "balance": 5000,
+  "annual_rate": 0.22,
+  "min_type": "invalid_type"
+}
+
+###############################################################################
+# NET VALUE ENDPOINT
+###############################################################################
+
+### Basic Net Value with Fixed Fee
+POST {{baseUrl}}/net
+Content-Type: application/json
+
+{
+  "desired_net": 10000,
+  "annual_rate": 0.12,
+  "terms": 12,
+  "fees": [
+    {"type": "fixed", "value": 500}
+  ]
+}
+
+### Net Value with Percentage Fee
+POST {{baseUrl}}/net
+Content-Type: application/json
+
+{
+  "desired_net": 10000,
+  "annual_rate": 0.12,
+  "terms": 12,
+  "fees": [
+    {"type": "percentage", "value": 0.03}
+  ]
+}
+
+### Net Value with Multiple Fees
+POST {{baseUrl}}/net
+Content-Type: application/json
+
+{
+  "desired_net": 10000,
+  "annual_rate": 0.12,
+  "terms": 12,
+  "fees": [
+    {"type": "fixed", "value": 200},
+    {"type": "percentage", "value": 0.02}
+  ]
+}
+
+### Higher Amount
+POST {{baseUrl}}/net
+Content-Type: application/json
+
+{
+  "desired_net": 50000,
+  "annual_rate": 0.10,
+  "terms": 24,
+  "fees": [
+    {"type": "percentage", "value": 0.025}
+  ]
+}
+
+### Small Amount
+POST {{baseUrl}}/net
+Content-Type: application/json
+
+{
+  "desired_net": 1000,
+  "annual_rate": 0.15,
+  "terms": 6,
+  "fees": [
+    {"type": "fixed", "value": 50}
+  ]
+}
+
+### Empty Fees (Principal = Net)
+POST {{baseUrl}}/net
+Content-Type: application/json
+
+{
+  "desired_net": 10000,
+  "annual_rate": 0.12,
+  "terms": 12,
+  "fees": []
+}

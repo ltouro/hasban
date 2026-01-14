@@ -8,13 +8,22 @@ extra-source-files:  CHANGELOG.md
 
 library
   hs-source-dirs:      src
-  exposed-modules:            
+  exposed-modules:
+    -- Hasban API
+    Hasban
+    Hasban.Types
+    Hasban.Loan
+    Hasban.Amortization
+    Hasban.CreditCard
+    Hasban.Validation
+    Hasban.Extension.Brazil.CETIP21
+    Hasban.Extension.Brazil.Tax
+    -- Supporting modules
     LoanApi
-    LoanCalculator
-    Date   
+    Date
+    Precision.CETIP21
   other-modules:
     GoalSeek
-    InterestFactor
   build-depends:       base >= 4.7 && < 5
                       , servant
                       , servant-server
@@ -50,6 +59,14 @@ executable hasban
 test-suite spec-test
   type: exitcode-stdio-1.0
   main-is: SpecTest.hs
+  other-modules:
+      Precision.CETIP21Spec
+    , InterestCalculation.MethodsSpec
+    , Calendar.BusinessDaySpec
+    , ProRata.DelayedCorrectionSpec
+    , Reference.CETIP21ReferenceSpec
+    , Hasban.LoanSpec
+    , Hasban.CreditCardSpec
   hs-source-dirs:
       test
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
