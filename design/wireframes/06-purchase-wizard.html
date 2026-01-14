@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=375, initial-scale=1">
+  <title>SimulaCredito - Asset Purchase Planning</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Inter:wght@400;500;600&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #2E7D32;
+      --primary-light: #4CAF50;
+      --secondary: #FF6B35;
+      --danger: #C62828;
+      --warning: #F9A825;
+      --neutral-900: #212121;
+      --neutral-700: #455A64;
+      --neutral-500: #78909C;
+      --neutral-300: #B0BEC5;
+      --neutral-100: #ECEFF1;
+      --background: #FAFAFA;
+      --card: #FFFFFF;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #1a1a2e;
+      padding: 40px;
+      color: var(--neutral-900);
+    }
+
+    h1, .section-title {
+      font-family: 'Nunito', sans-serif;
+      font-size: 28px;
+      font-weight: 800;
+      color: white;
+      margin-bottom: 32px;
+    }
+
+    .section-title { margin-top: 48px; }
+
+    .screens-row {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+
+    .screen-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .screen-label {
+      color: white;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      text-align: center;
+    }
+
+    .phone-frame {
+      width: 375px;
+      height: 812px;
+      background: var(--background);
+      border-radius: 40px;
+      overflow: hidden;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+    }
+
+    .screen-content {
+      height: 100%;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .wizard-header {
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: white;
+      border-bottom: 1px solid var(--neutral-100);
+    }
+
+    .back-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: var(--neutral-100);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+
+    .wizard-title {
+      font-family: 'Nunito', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      flex: 1;
+    }
+
+    .wizard-content {
+      flex: 1;
+      padding: 24px;
+    }
+
+    .step-title {
+      font-family: 'Nunito', sans-serif;
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--neutral-900);
+      margin-bottom: 8px;
+    }
+
+    .step-subtitle {
+      font-size: 14px;
+      color: var(--neutral-500);
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+
+    .wizard-footer {
+      padding: 24px;
+      background: white;
+      border-top: 1px solid var(--neutral-100);
+    }
+
+    .btn {
+      width: 100%;
+      padding: 16px 24px;
+      border-radius: 12px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-secondary { background: transparent; color: var(--primary); margin-top: 12px; }
+
+    /* Asset Type Selector */
+    .asset-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .asset-card {
+      background: white;
+      border: 2px solid var(--neutral-100);
+      border-radius: 16px;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .asset-card:hover {
+      border-color: var(--neutral-300);
+    }
+
+    .asset-card.selected {
+      border-color: var(--primary);
+      background: rgba(46, 125, 50, 0.05);
+    }
+
+    .asset-card .icon {
+      font-size: 40px;
+      margin-bottom: 8px;
+    }
+
+    .asset-card .label {
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    /* Input Styles */
+    .input-group {
+      margin-bottom: 24px;
+    }
+
+    .input-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--neutral-700);
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .input-field {
+      width: 100%;
+      padding: 16px;
+      border: 2px solid var(--neutral-300);
+      border-radius: 12px;
+      font-size: 16px;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .input-field:focus {
+      border-color: var(--primary);
+      outline: none;
+    }
+
+    .input-currency {
+      position: relative;
+    }
+
+    .input-currency .prefix {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-family: 'Roboto Mono', monospace;
+      font-weight: 500;
+      color: var(--neutral-500);
+    }
+
+    .input-currency input {
+      padding-left: 48px;
+      font-family: 'Roboto Mono', monospace;
+    }
+
+    .input-hint {
+      font-size: 12px;
+      color: var(--neutral-500);
+      margin-top: 6px;
+    }
+
+    /* Down Payment */
+    .down-payment-options {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .down-payment-option {
+      flex: 1;
+      padding: 12px;
+      background: white;
+      border: 2px solid var(--neutral-100);
+      border-radius: 10px;
+      text-align: center;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .down-payment-option.selected {
+      border-color: var(--primary);
+      background: rgba(46, 125, 50, 0.05);
+      color: var(--primary);
+    }
+
+    /* Profile Box */
+    .profile-box {
+      background: linear-gradient(135deg, rgba(46, 125, 50, 0.05), rgba(46, 125, 50, 0.1));
+      border: 2px solid var(--primary-light);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+
+    .profile-box-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .profile-box-icon {
+      font-size: 24px;
+    }
+
+    .profile-box-title {
+      font-family: 'Nunito', sans-serif;
+      font-weight: 700;
+      font-size: 16px;
+    }
+
+    .profile-box-content {
+      font-size: 14px;
+      color: var(--neutral-700);
+      line-height: 1.5;
+    }
+
+    .profile-box-rate {
+      font-family: 'Roboto Mono', monospace;
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--primary);
+      margin-top: 8px;
+    }
+
+    .profile-box-hint {
+      font-size: 12px;
+      color: var(--neutral-500);
+      margin-top: 4px;
+    }
+
+    /* Term Comparison */
+    .term-options {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .term-card {
+      background: white;
+      border: 2px solid var(--neutral-100);
+      border-radius: 16px;
+      padding: 16px 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .term-card:hover {
+      border-color: var(--neutral-300);
+    }
+
+    .term-card.selected {
+      border-color: var(--primary);
+      background: rgba(46, 125, 50, 0.02);
+    }
+
+    .term-card.warning {
+      border-color: var(--warning);
+    }
+
+    .term-months {
+      font-family: 'Nunito', sans-serif;
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--neutral-900);
+      min-width: 60px;
+    }
+
+    .term-details {
+      flex: 1;
+    }
+
+    .term-payment {
+      font-family: 'Roboto Mono', monospace;
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .term-total {
+      font-size: 12px;
+      color: var(--neutral-500);
+    }
+
+    .term-badge {
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .badge-best {
+      background: rgba(46, 125, 50, 0.1);
+      color: var(--primary);
+    }
+
+    .badge-warning {
+      background: rgba(249, 168, 37, 0.1);
+      color: var(--warning);
+    }
+
+    /* Cost Comparison */
+    .cost-comparison {
+      background: white;
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+
+    .cost-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--neutral-100);
+    }
+
+    .cost-row:last-child {
+      border-bottom: none;
+    }
+
+    .cost-row .label {
+      color: var(--neutral-500);
+      font-size: 14px;
+    }
+
+    .cost-row .value {
+      font-family: 'Roboto Mono', monospace;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .cost-row.highlight {
+      background: rgba(198, 40, 40, 0.05);
+      margin: 0 -20px;
+      padding: 12px 20px;
+      border-radius: 8px;
+    }
+
+    .cost-row.highlight .label {
+      color: var(--danger);
+      font-weight: 600;
+    }
+
+    .cost-row.highlight .value {
+      color: var(--danger);
+      font-weight: 700;
+    }
+
+    /* Chart Placeholder */
+    .chart-container {
+      background: white;
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+
+    .chart-title {
+      font-family: 'Nunito', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    .chart-bars {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-around;
+      height: 160px;
+      padding: 0 20px;
+    }
+
+    .chart-bar-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .chart-bar {
+      width: 48px;
+      border-radius: 8px 8px 0 0;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding-bottom: 8px;
+      font-size: 10px;
+      font-weight: 600;
+      color: white;
+    }
+
+    .chart-label {
+      font-size: 12px;
+      color: var(--neutral-500);
+      text-align: center;
+    }
+
+    /* Amortization Picker */
+    .amort-comparison {
+      background: white;
+      border-radius: 16px;
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+
+    .amort-tab-header {
+      display: flex;
+      border-bottom: 1px solid var(--neutral-100);
+    }
+
+    .amort-tab {
+      flex: 1;
+      padding: 16px;
+      text-align: center;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+    }
+
+    .amort-tab.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+    }
+
+    .amort-content {
+      padding: 20px;
+    }
+
+    .amort-chart {
+      height: 100px;
+      background: linear-gradient(180deg, rgba(46, 125, 50, 0.1) 0%, rgba(46, 125, 50, 0.02) 100%);
+      border-radius: 8px;
+      display: flex;
+      align-items: flex-end;
+      padding: 8px;
+      margin-bottom: 16px;
+    }
+
+    .amort-chart-bar {
+      flex: 1;
+      background: var(--primary);
+      border-radius: 4px 4px 0 0;
+      margin: 0 1px;
+    }
+
+    .amort-stats {
+      display: flex;
+      gap: 16px;
+    }
+
+    .amort-stat {
+      flex: 1;
+      text-align: center;
+    }
+
+    .amort-stat .label {
+      font-size: 11px;
+      color: var(--neutral-500);
+      margin-bottom: 4px;
+    }
+
+    .amort-stat .value {
+      font-family: 'Roboto Mono', monospace;
+      font-size: 14px;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <h1>Asset Purchase Planning</h1>
+
+  <div class="section-title">Step 1: What to Buy</div>
+  <div class="screens-row">
+    <div class="screen-container">
+      <div class="screen-label">Step 1: Asset Selection</div>
+      <div class="phone-frame">
+        <div class="screen-content">
+          <div class="wizard-header">
+            <div class="back-btn">←</div>
+            <div class="wizard-title">Comprar Algo</div>
+          </div>
+
+          <div class="wizard-content">
+            <div class="step-title">O que voce quer comprar?</div>
+            <div class="step-subtitle">Escolha o tipo de bem para uma simulacao mais precisa</div>
+
+            <div class="asset-grid">
+              <div class="asset-card selected">
+                <div class="icon">🚗</div>
+                <div class="label">Carro</div>
+              </div>
+              <div class="asset-card">
+                <div class="icon">🏍️</div>
+                <div class="label">Moto</div>
+              </div>
+              <div class="asset-card">
+                <div class="icon">📱</div>
+                <div class="label">Eletronico</div>
+              </div>
+              <div class="asset-card">
+                <div class="icon">🛋️</div>
+                <div class="label">Moveis</div>
+              </div>
+              <div class="asset-card">
+                <div class="icon">🏠</div>
+                <div class="label">Reforma</div>
+              </div>
+              <div class="asset-card">
+                <div class="icon">📦</div>
+                <div class="label">Outro</div>
+              </div>
+            </div>
+
+            <div class="input-group">
+              <label class="input-label">Valor do bem</label>
+              <div class="input-currency">
+                <span class="prefix">R$</span>
+                <input type="text" class="input-field" placeholder="0,00">
+              </div>
+              <div class="input-hint">Preco a vista do que voce quer comprar</div>
+            </div>
+          </div>
+
+          <div class="wizard-footer">
+            <button class="btn btn-primary">Continuar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="screen-container">
+      <div class="screen-label">Step 1: Filled</div>
+      <div class="phone-frame">
+        <div class="screen-content">
+          <div class="wizard-header">
+            <div class="back-btn">←</div>
+            <div class="wizard-title">Comprar Algo</div>
+          </div>
+
+          <div class="wizard-content">
+            <div class="step-title">O que voce quer comprar?</div>
+            <div class="step-subtitle">Escolha o tipo de bem para uma simulacao mais precisa</div>
+
+            <div class="asset-grid">
+              <div class="asset-card selected">
+                <div class="icon">🚗</div>
+                <div class="label">Carro</div>
+              </div>
+              <div class="asset-card">
+                <div class="icon">🏍️</div>
+                <div class="label">Moto</div>
+              </div>
+              <div class="asset-card">
+                <div class="icon">📱</div>
+                <div class="label">Eletronico</div>
+              </div>
+              <div class="asset-card">
+                <div class="icon">🛋️</div>
+                <div class="label">Moveis</div>
+              </div>
+            </div>
+
+            <div class="input-group">
+              <label class="input-label">Valor do carro</label>
+              <div class="input-currency">
+                <span class="prefix">R$</span>
+                <input type="text" class="input-field" value="45.000,00" style="border-color: var(--primary);">
+              </div>
+            </div>
+
+            <div class="input-group">
+              <label class="input-label">Entrada</label>
+              <div class="down-payment-options">
+                <div class="down-payment-option">0%</div>
+                <div class="down-payment-option">10%</div>
+                <div class="down-payment-option selected">20%</div>
+                <div class="down-payment-option">30%</div>
+              </div>
+              <div class="input-currency">
+                <span class="prefix">R$</span>
+                <input type="text" class="input-field" value="9.000,00">
+              </div>
+              <div class="input-hint">Valor que voce tem disponivel agora</div>
+            </div>
+          </div>
+
+          <div class="wizard-footer">
+            <button class="btn btn-primary">Ver Opcoes de Financiamento</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title">Step 2: Rate Based on Profile</div>
+  <div class="screens-row">
+    <div class="screen-container">
+      <div class="screen-label">Step 2: Rate Estimation</div>
+      <div class="phone-frame">
+        <div class="screen-content">
+          <div class="wizard-header">
+            <div class="back-btn">←</div>
+            <div class="wizard-title">Comprar Algo</div>
+          </div>
+
+          <div class="wizard-content">
+            <div class="step-title">Sua taxa estimada</div>
+            <div class="step-subtitle">Baseado no seu perfil financeiro</div>
+
+            <div class="profile-box">
+              <div class="profile-box-header">
+                <div class="profile-box-icon">👤</div>
+                <div class="profile-box-title">Seu Perfil</div>
+              </div>
+              <div class="profile-box-content">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                  <span>Renda:</span>
+                  <span style="font-weight: 600;">R$ 5.000/mes</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                  <span>Comprometimento:</span>
+                  <span style="font-weight: 600;">18%</span>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                  <span>Score estimado:</span>
+                  <span style="font-weight: 600; color: var(--primary);">Bom</span>
+                </div>
+              </div>
+              <div class="profile-box-rate">1,8% a 2,5% a.m.</div>
+              <div class="profile-box-hint">Taxa estimada para financiamento de veiculos</div>
+            </div>
+
+            <div style="background: rgba(255, 107, 53, 0.1); border-radius: 12px; padding: 16px; margin-bottom: 24px;">
+              <div style="display: flex; align-items: flex-start; gap: 12px;">
+                <span style="font-size: 20px;">💡</span>
+                <div style="font-size: 13px; color: var(--neutral-700); line-height: 1.5;">
+                  <strong>Dica:</strong> Com uma entrada maior (30%), voce pode conseguir taxas melhores!
+                </div>
+              </div>
+            </div>
+
+            <div class="input-group">
+              <label class="input-label">Usar taxa de:</label>
+              <div style="display: flex; gap: 12px;">
+                <input type="text" class="input-field" style="flex: 1; text-align: center;" value="2,0">
+                <div style="display: flex; align-items: center; padding: 0 16px; background: var(--neutral-100); border-radius: 12px; font-weight: 600;">% a.m.</div>
+              </div>
+              <div class="input-hint">Voce pode ajustar para simular diferentes cenarios</div>
+            </div>
+          </div>
+
+          <div class="wizard-footer">
+            <button class="btn btn-primary">Ver Prazos e Parcelas</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title">Step 3: Term Comparison</div>
+  <div class="screens-row">
+    <div class="screen-container">
+      <div class="screen-label">Step 3: Choose Term</div>
+      <div class="phone-frame">
+        <div class="screen-content">
+          <div class="wizard-header">
+            <div class="back-btn">←</div>
+            <div class="wizard-title">Comprar Algo</div>
+          </div>
+
+          <div class="wizard-content">
+            <div class="step-title">Escolha o prazo</div>
+            <div class="step-subtitle">Financiamento de R$ 36.000 (apos entrada)</div>
+
+            <div class="term-options">
+              <div class="term-card">
+                <div class="term-months">12x</div>
+                <div class="term-details">
+                  <div class="term-payment">R$ 3.380/mes</div>
+                  <div class="term-total">Total: R$ 40.560</div>
+                </div>
+                <div class="term-badge badge-best">Menos juros</div>
+              </div>
+
+              <div class="term-card selected">
+                <div class="term-months">24x</div>
+                <div class="term-details">
+                  <div class="term-payment" style="color: var(--primary);">R$ 1.850/mes</div>
+                  <div class="term-total">Total: R$ 44.400</div>
+                </div>
+                <div class="term-badge badge-best">Melhor custo-beneficio</div>
+              </div>
+
+              <div class="term-card">
+                <div class="term-months">36x</div>
+                <div class="term-details">
+                  <div class="term-payment">R$ 1.350/mes</div>
+                  <div class="term-total">Total: R$ 48.600</div>
+                </div>
+              </div>
+
+              <div class="term-card warning">
+                <div class="term-months">48x</div>
+                <div class="term-details">
+                  <div class="term-payment">R$ 1.100/mes</div>
+                  <div class="term-total">Total: R$ 52.800</div>
+                </div>
+                <div class="term-badge badge-warning">+47% de juros</div>
+              </div>
+            </div>
+
+            <div class="cost-comparison">
+              <div style="font-family: 'Nunito', sans-serif; font-weight: 700; margin-bottom: 12px;">Resumo: 24 meses</div>
+              <div class="cost-row">
+                <span class="label">Valor do carro</span>
+                <span class="value">R$ 45.000,00</span>
+              </div>
+              <div class="cost-row">
+                <span class="label">Entrada (20%)</span>
+                <span class="value">- R$ 9.000,00</span>
+              </div>
+              <div class="cost-row">
+                <span class="label">Financiado</span>
+                <span class="value">R$ 36.000,00</span>
+              </div>
+              <div class="cost-row highlight">
+                <span class="label">Juros que vai pagar</span>
+                <span class="value">+ R$ 8.400,00</span>
+              </div>
+              <div class="cost-row" style="font-weight: 600;">
+                <span class="label">Custo total</span>
+                <span class="value">R$ 53.400,00</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="wizard-footer">
+            <button class="btn btn-primary">Ver Detalhes</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title">Step 4: Amortization Comparison</div>
+  <div class="screens-row">
+    <div class="screen-container">
+      <div class="screen-label">Step 4: PRICE vs SAC</div>
+      <div class="phone-frame">
+        <div class="screen-content">
+          <div class="wizard-header">
+            <div class="back-btn">←</div>
+            <div class="wizard-title">Comprar Algo</div>
+          </div>
+
+          <div class="wizard-content">
+            <div class="step-title">Tipo de parcela</div>
+            <div class="step-subtitle">Compare as opcoes de pagamento</div>
+
+            <div class="amort-comparison">
+              <div class="amort-tab-header">
+                <div class="amort-tab active">PRICE (Fixa)</div>
+                <div class="amort-tab">SAC (Decrescente)</div>
+              </div>
+              <div class="amort-content">
+                <div class="amort-chart">
+                  <!-- Equal bars for PRICE -->
+                  <div class="amort-chart-bar" style="height: 60%;"></div>
+                  <div class="amort-chart-bar" style="height: 60%;"></div>
+                  <div class="amort-chart-bar" style="height: 60%;"></div>
+                  <div class="amort-chart-bar" style="height: 60%;"></div>
+                  <div class="amort-chart-bar" style="height: 60%;"></div>
+                  <div class="amort-chart-bar" style="height: 60%;"></div>
+                  <div class="amort-chart-bar" style="height: 60%;"></div>
+                  <div class="amort-chart-bar" style="height: 60%;"></div>
+                  <div class="amort-chart-bar" style="height: 60%;"></div>
+                  <div class="amort-chart-bar" style="height: 60%;"></div>
+                  <div class="amort-chart-bar" style="height: 60%;"></div>
+                  <div class="amort-chart-bar" style="height: 60%;"></div>
+                </div>
+                <div class="amort-stats">
+                  <div class="amort-stat">
+                    <div class="label">Primeira parcela</div>
+                    <div class="value">R$ 1.850</div>
+                  </div>
+                  <div class="amort-stat">
+                    <div class="label">Ultima parcela</div>
+                    <div class="value">R$ 1.850</div>
+                  </div>
+                  <div class="amort-stat">
+                    <div class="label">Total de juros</div>
+                    <div class="value">R$ 8.400</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="chart-container">
+              <div class="chart-title">Comparativo Visual</div>
+              <div class="chart-bars">
+                <div class="chart-bar-group">
+                  <div class="chart-bar" style="height: 100px; background: var(--neutral-300);">R$ 45k</div>
+                  <div class="chart-label">A vista</div>
+                </div>
+                <div class="chart-bar-group">
+                  <div class="chart-bar" style="height: 118px; background: var(--primary);">R$ 53k</div>
+                  <div class="chart-label">PRICE 24x</div>
+                </div>
+                <div class="chart-bar-group">
+                  <div class="chart-bar" style="height: 115px; background: var(--primary-light);">R$ 52k</div>
+                  <div class="chart-label">SAC 24x</div>
+                </div>
+              </div>
+            </div>
+
+            <div style="background: rgba(46, 125, 50, 0.1); border-radius: 12px; padding: 16px; text-align: center;">
+              <div style="font-size: 14px; color: var(--primary); font-weight: 600;">
+                💡 SAC economiza R$ 890 em juros!
+              </div>
+              <div style="font-size: 12px; color: var(--neutral-500); margin-top: 4px;">
+                Mas comeca com parcela maior (R$ 2.220)
+              </div>
+            </div>
+          </div>
+
+          <div class="wizard-footer">
+            <button class="btn btn-primary">Ver Cronograma Completo</button>
+            <button class="btn btn-secondary">Salvar Simulacao</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

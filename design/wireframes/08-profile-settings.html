@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=375, initial-scale=1">
+  <title>SimulaCredito - Profile & Settings</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Inter:wght@400;500;600&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #2E7D32;
+      --primary-light: #4CAF50;
+      --secondary: #FF6B35;
+      --danger: #C62828;
+      --warning: #F9A825;
+      --neutral-900: #212121;
+      --neutral-700: #455A64;
+      --neutral-500: #78909C;
+      --neutral-300: #B0BEC5;
+      --neutral-100: #ECEFF1;
+      --background: #FAFAFA;
+      --card: #FFFFFF;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #1a1a2e;
+      padding: 40px;
+      color: var(--neutral-900);
+    }
+
+    h1, .section-title {
+      font-family: 'Nunito', sans-serif;
+      font-size: 28px;
+      font-weight: 800;
+      color: white;
+      margin-bottom: 32px;
+    }
+
+    .section-title { margin-top: 48px; }
+
+    .screens-row {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+
+    .screen-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .screen-label {
+      color: white;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      text-align: center;
+    }
+
+    .phone-frame {
+      width: 375px;
+      height: 812px;
+      background: var(--background);
+      border-radius: 40px;
+      overflow: hidden;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+      position: relative;
+    }
+
+    .screen-content {
+      height: calc(100% - 80px);
+      overflow-y: auto;
+    }
+
+    .tab-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 80px;
+      background: white;
+      display: flex;
+      padding: 8px 16px 24px;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+    }
+
+    .tab-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--neutral-500);
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    .tab-item .icon { font-size: 24px; margin-bottom: 4px; }
+    .tab-item.active { color: var(--primary); }
+
+    /* Profile Header */
+    .profile-header {
+      background: linear-gradient(135deg, var(--primary), #1B5E20);
+      padding: 32px 24px;
+      text-align: center;
+      color: white;
+    }
+
+    .profile-avatar {
+      width: 80px;
+      height: 80px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 50%;
+      margin: 0 auto 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
+    }
+
+    .profile-name {
+      font-family: 'Nunito', sans-serif;
+      font-size: 24px;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+
+    .profile-email {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    /* Stats Cards */
+    .stats-row {
+      display: flex;
+      gap: 12px;
+      padding: 24px;
+      margin-top: -20px;
+    }
+
+    .stat-card {
+      flex: 1;
+      background: white;
+      border-radius: 16px;
+      padding: 16px;
+      text-align: center;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    }
+
+    .stat-value {
+      font-family: 'Roboto Mono', monospace;
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 4px;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: var(--neutral-500);
+    }
+
+    /* Menu Sections */
+    .menu-section {
+      padding: 0 24px 24px;
+    }
+
+    .menu-title {
+      font-family: 'Nunito', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--neutral-500);
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      font-size: 12px;
+      letter-spacing: 0.5px;
+    }
+
+    .menu-card {
+      background: white;
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    .menu-item {
+      display: flex;
+      align-items: center;
+      padding: 16px;
+      border-bottom: 1px solid var(--neutral-100);
+      cursor: pointer;
+    }
+
+    .menu-item:last-child {
+      border-bottom: none;
+    }
+
+    .menu-item:hover {
+      background: var(--neutral-100);
+    }
+
+    .menu-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      margin-right: 12px;
+    }
+
+    .menu-content {
+      flex: 1;
+    }
+
+    .menu-label {
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .menu-sublabel {
+      font-size: 12px;
+      color: var(--neutral-500);
+    }
+
+    .menu-arrow {
+      color: var(--neutral-300);
+      font-size: 20px;
+    }
+
+    .menu-badge {
+      background: var(--danger);
+      color: white;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 10px;
+      margin-right: 8px;
+    }
+
+    /* Toggle Switch */
+    .toggle-switch {
+      width: 48px;
+      height: 28px;
+      background: var(--neutral-300);
+      border-radius: 14px;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .toggle-switch.active {
+      background: var(--primary);
+    }
+
+    .toggle-switch::after {
+      content: '';
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      background: white;
+      border-radius: 50%;
+      top: 2px;
+      left: 2px;
+      transition: left 0.2s;
+    }
+
+    .toggle-switch.active::after {
+      left: 22px;
+    }
+
+    /* Achievements Section */
+    .achievements-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .achievement-item {
+      text-align: center;
+    }
+
+    .achievement-badge {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      margin: 0 auto 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+
+    .achievement-badge.unlocked {
+      background: linear-gradient(135deg, #FFD54F, #FFC107);
+    }
+
+    .achievement-badge.locked {
+      background: var(--neutral-100);
+      filter: grayscale(1);
+      opacity: 0.5;
+    }
+
+    .achievement-name {
+      font-size: 10px;
+      color: var(--neutral-500);
+    }
+
+    /* Level Progress */
+    .level-card {
+      background: linear-gradient(135deg, #FFF8E1, #FFECB3);
+      border: 2px solid #FFD54F;
+      border-radius: 16px;
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .level-badge {
+      width: 56px;
+      height: 56px;
+      background: linear-gradient(135deg, #FFD54F, #FFC107);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+    }
+
+    .level-content {
+      flex: 1;
+    }
+
+    .level-title {
+      font-family: 'Nunito', sans-serif;
+      font-weight: 700;
+      font-size: 16px;
+    }
+
+    .level-xp {
+      font-size: 12px;
+      color: var(--neutral-500);
+      margin-bottom: 8px;
+    }
+
+    .level-bar {
+      height: 8px;
+      background: rgba(255, 193, 7, 0.3);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .level-fill {
+      height: 100%;
+      background: #FFC107;
+      border-radius: 4px;
+    }
+
+    /* Financial Profile Edit */
+    .form-section {
+      padding: 24px;
+    }
+
+    .form-title {
+      font-family: 'Nunito', sans-serif;
+      font-size: 24px;
+      font-weight: 800;
+      margin-bottom: 24px;
+    }
+
+    .input-group {
+      margin-bottom: 20px;
+    }
+
+    .input-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--neutral-700);
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .input-field {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid var(--neutral-300);
+      border-radius: 12px;
+      font-size: 16px;
+    }
+
+    .input-field:focus {
+      border-color: var(--primary);
+      outline: none;
+    }
+
+    .input-currency {
+      position: relative;
+    }
+
+    .input-currency .prefix {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--neutral-500);
+    }
+
+    .input-currency input {
+      padding-left: 48px;
+      font-family: 'Roboto Mono', monospace;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 16px;
+      border-radius: 12px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-secondary { background: transparent; color: var(--primary); margin-top: 12px; }
+  </style>
+</head>
+<body>
+  <h1>Profile & Settings</h1>
+
+  <div class="section-title">Profile Tab</div>
+  <div class="screens-row">
+    <div class="screen-container">
+      <div class="screen-label">Profile: Main View</div>
+      <div class="phone-frame">
+        <div class="screen-content">
+          <div class="profile-header">
+            <div class="profile-avatar">👩</div>
+            <div class="profile-name">Maria Silva</div>
+            <div class="profile-email">Membro desde Jan 2024</div>
+          </div>
+
+          <div class="stats-row">
+            <div class="stat-card">
+              <div class="stat-value">12</div>
+              <div class="stat-label">Simulacoes</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value">R$ 4.2k</div>
+              <div class="stat-label">Economia</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value">85</div>
+              <div class="stat-label">XP</div>
+            </div>
+          </div>
+
+          <div class="menu-section">
+            <div class="level-card">
+              <div class="level-badge">🥈</div>
+              <div class="level-content">
+                <div class="level-title">Nivel Prata</div>
+                <div class="level-xp">85 / 150 XP para Ouro</div>
+                <div class="level-bar">
+                  <div class="level-fill" style="width: 57%;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="menu-section">
+            <div class="menu-title">Meu Perfil</div>
+            <div class="menu-card">
+              <div class="menu-item">
+                <div class="menu-icon" style="background: rgba(46,125,50,0.1);">💰</div>
+                <div class="menu-content">
+                  <div class="menu-label">Dados Financeiros</div>
+                  <div class="menu-sublabel">Renda, dividas, metas</div>
+                </div>
+                <div class="menu-arrow">›</div>
+              </div>
+              <div class="menu-item">
+                <div class="menu-icon" style="background: rgba(255,193,7,0.1);">🏆</div>
+                <div class="menu-content">
+                  <div class="menu-label">Conquistas</div>
+                  <div class="menu-sublabel">4 de 12 desbloqueadas</div>
+                </div>
+                <div class="menu-arrow">›</div>
+              </div>
+              <div class="menu-item">
+                <div class="menu-icon" style="background: rgba(156,39,176,0.1);">📊</div>
+                <div class="menu-content">
+                  <div class="menu-label">Historico de Simulacoes</div>
+                  <div class="menu-sublabel">12 simulacoes salvas</div>
+                </div>
+                <div class="menu-arrow">›</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="menu-section">
+            <div class="menu-title">Configuracoes</div>
+            <div class="menu-card">
+              <div class="menu-item">
+                <div class="menu-icon" style="background: rgba(33,150,243,0.1);">🔔</div>
+                <div class="menu-content">
+                  <div class="menu-label">Notificacoes</div>
+                </div>
+                <div class="toggle-switch active"></div>
+              </div>
+              <div class="menu-item">
+                <div class="menu-icon" style="background: rgba(96,125,139,0.1);">🌙</div>
+                <div class="menu-content">
+                  <div class="menu-label">Modo Escuro</div>
+                </div>
+                <div class="toggle-switch"></div>
+              </div>
+              <div class="menu-item">
+                <div class="menu-icon" style="background: rgba(255,152,0,0.1);">📤</div>
+                <div class="menu-content">
+                  <div class="menu-label">Exportar Dados</div>
+                </div>
+                <div class="menu-arrow">›</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-bar">
+          <div class="tab-item">
+            <div class="icon">🏠</div>
+            <span>Inicio</span>
+          </div>
+          <div class="tab-item">
+            <div class="icon">📊</div>
+            <span>Simular</span>
+          </div>
+          <div class="tab-item">
+            <div class="icon">💳</div>
+            <span>Dividas</span>
+          </div>
+          <div class="tab-item">
+            <div class="icon">📚</div>
+            <span>Aprender</span>
+          </div>
+          <div class="tab-item active">
+            <div class="icon">👤</div>
+            <span>Perfil</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="screen-container">
+      <div class="screen-label">Profile: Achievements</div>
+      <div class="phone-frame">
+        <div class="screen-content">
+          <div style="padding: 16px 24px; display: flex; align-items: center; gap: 16px; background: white; border-bottom: 1px solid var(--neutral-100);">
+            <div style="width: 40px; height: 40px; border-radius: 12px; background: var(--neutral-100); display: flex; align-items: center; justify-content: center; font-size: 20px;">←</div>
+            <div style="flex: 1; font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 18px;">Conquistas</div>
+          </div>
+
+          <div style="padding: 24px;">
+            <div class="level-card" style="margin-bottom: 24px;">
+              <div class="level-badge">🥈</div>
+              <div class="level-content">
+                <div class="level-title">Nivel Prata</div>
+                <div class="level-xp">85 / 150 XP para Ouro</div>
+                <div class="level-bar">
+                  <div class="level-fill" style="width: 57%;"></div>
+                </div>
+              </div>
+            </div>
+
+            <div style="font-family: 'Nunito', sans-serif; font-weight: 700; margin-bottom: 16px;">Desbloqueadas (4)</div>
+            <div class="achievements-grid">
+              <div class="achievement-item">
+                <div class="achievement-badge unlocked">🎓</div>
+                <div class="achievement-name">Primeiros Passos</div>
+              </div>
+              <div class="achievement-item">
+                <div class="achievement-badge unlocked">📊</div>
+                <div class="achievement-name">Simulador Pro</div>
+              </div>
+              <div class="achievement-item">
+                <div class="achievement-badge unlocked">👁️</div>
+                <div class="achievement-name">Reality Check</div>
+              </div>
+              <div class="achievement-item">
+                <div class="achievement-badge unlocked">💰</div>
+                <div class="achievement-name">Cacador</div>
+              </div>
+            </div>
+
+            <div style="font-family: 'Nunito', sans-serif; font-weight: 700; margin: 24px 0 16px;">Bloqueadas (8)</div>
+            <div class="achievements-grid">
+              <div class="achievement-item">
+                <div class="achievement-badge locked">🎯</div>
+                <div class="achievement-name">Rastreador</div>
+              </div>
+              <div class="achievement-item">
+                <div class="achievement-badge locked">🏅</div>
+                <div class="achievement-name">25% Pago</div>
+              </div>
+              <div class="achievement-item">
+                <div class="achievement-badge locked">🥈</div>
+                <div class="achievement-name">50% Pago</div>
+              </div>
+              <div class="achievement-item">
+                <div class="achievement-badge locked">🥇</div>
+                <div class="achievement-name">75% Pago</div>
+              </div>
+              <div class="achievement-item">
+                <div class="achievement-badge locked">👑</div>
+                <div class="achievement-name">Livre!</div>
+              </div>
+              <div class="achievement-item">
+                <div class="achievement-badge locked">⚖️</div>
+                <div class="achievement-name">Comparador</div>
+              </div>
+              <div class="achievement-item">
+                <div class="achievement-badge locked">📚</div>
+                <div class="achievement-name">Estudioso</div>
+              </div>
+              <div class="achievement-item">
+                <div class="achievement-badge locked">🧠</div>
+                <div class="achievement-name">Estrategista</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-bar">
+          <div class="tab-item">
+            <div class="icon">🏠</div>
+            <span>Inicio</span>
+          </div>
+          <div class="tab-item">
+            <div class="icon">📊</div>
+            <span>Simular</span>
+          </div>
+          <div class="tab-item">
+            <div class="icon">💳</div>
+            <span>Dividas</span>
+          </div>
+          <div class="tab-item">
+            <div class="icon">📚</div>
+            <span>Aprender</span>
+          </div>
+          <div class="tab-item active">
+            <div class="icon">👤</div>
+            <span>Perfil</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="screen-container">
+      <div class="screen-label">Profile: Edit Financial Data</div>
+      <div class="phone-frame">
+        <div class="screen-content">
+          <div style="padding: 16px 24px; display: flex; align-items: center; gap: 16px; background: white; border-bottom: 1px solid var(--neutral-100);">
+            <div style="width: 40px; height: 40px; border-radius: 12px; background: var(--neutral-100); display: flex; align-items: center; justify-content: center; font-size: 20px;">←</div>
+            <div style="flex: 1; font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 18px;">Dados Financeiros</div>
+          </div>
+
+          <div class="form-section">
+            <div style="background: rgba(46,125,50,0.1); border-radius: 12px; padding: 16px; margin-bottom: 24px;">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 24px;">💡</span>
+                <div style="font-size: 13px; color: var(--neutral-700);">
+                  Quanto mais informacoes, melhores serao as estimativas de taxa para seu perfil.
+                </div>
+              </div>
+            </div>
+
+            <div class="input-group">
+              <label class="input-label">Renda mensal bruta</label>
+              <div class="input-currency">
+                <span class="prefix">R$</span>
+                <input type="text" class="input-field" value="5.000,00">
+              </div>
+            </div>
+
+            <div class="input-group">
+              <label class="input-label">Renda liquida (apos descontos)</label>
+              <div class="input-currency">
+                <span class="prefix">R$</span>
+                <input type="text" class="input-field" value="4.200,00">
+              </div>
+            </div>
+
+            <div class="input-group">
+              <label class="input-label">Despesas fixas mensais</label>
+              <div class="input-currency">
+                <span class="prefix">R$</span>
+                <input type="text" class="input-field" value="2.800,00">
+              </div>
+            </div>
+
+            <div class="input-group">
+              <label class="input-label">Pagamento de dividas atual</label>
+              <div class="input-currency">
+                <span class="prefix">R$</span>
+                <input type="text" class="input-field" value="500,00">
+              </div>
+            </div>
+
+            <div style="background: white; border-radius: 16px; padding: 20px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+              <div style="font-family: 'Nunito', sans-serif; font-weight: 700; margin-bottom: 12px;">Seu perfil estimado</div>
+              <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <span style="color: var(--neutral-500);">Disponivel para dividas:</span>
+                <span style="font-weight: 600; color: var(--primary);">R$ 760/mes</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <span style="color: var(--neutral-500);">Comprometimento:</span>
+                <span style="font-weight: 600;">18%</span>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--neutral-500);">Score estimado:</span>
+                <span style="font-weight: 600; color: var(--primary);">Bom</span>
+              </div>
+            </div>
+
+            <button class="btn btn-primary">Salvar Alteracoes</button>
+            <button class="btn btn-secondary">Cancelar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

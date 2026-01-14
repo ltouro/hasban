@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=375, initial-scale=1">
+  <title>SimulaCredito - Results & Debt Tracker</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Inter:wght@400;500;600&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #2E7D32;
+      --primary-light: #4CAF50;
+      --secondary: #FF6B35;
+      --danger: #C62828;
+      --warning: #F9A825;
+      --neutral-900: #212121;
+      --neutral-700: #455A64;
+      --neutral-500: #78909C;
+      --neutral-300: #B0BEC5;
+      --neutral-100: #ECEFF1;
+      --background: #FAFAFA;
+      --card: #FFFFFF;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #1a1a2e;
+      padding: 40px;
+      color: var(--neutral-900);
+    }
+
+    h1, .section-title {
+      font-family: 'Nunito', sans-serif;
+      font-size: 28px;
+      font-weight: 800;
+      color: white;
+      margin-bottom: 32px;
+    }
+
+    .section-title { margin-top: 48px; }
+
+    .screens-row {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+
+    .screen-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .screen-label {
+      color: white;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      text-align: center;
+    }
+
+    .phone-frame {
+      width: 375px;
+      height: 812px;
+      background: var(--background);
+      border-radius: 40px;
+      overflow: hidden;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+      position: relative;
+    }
+
+    .screen-content {
+      height: calc(100% - 80px);
+      overflow-y: auto;
+    }
+
+    .tab-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 80px;
+      background: white;
+      display: flex;
+      padding: 8px 16px 24px;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+    }
+
+    .tab-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--neutral-500);
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    .tab-item .icon { font-size: 24px; margin-bottom: 4px; }
+    .tab-item.active { color: var(--primary); }
+
+    /* Results Header */
+    .results-header {
+      background: linear-gradient(135deg, var(--primary), #1B5E20);
+      color: white;
+      padding: 24px;
+      text-align: center;
+    }
+
+    .results-icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+    }
+
+    .results-title {
+      font-family: 'Nunito', sans-serif;
+      font-size: 24px;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+
+    .results-subtitle {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    /* Summary Cards */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      padding: 24px;
+      margin-top: -20px;
+    }
+
+    .summary-card {
+      background: white;
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    }
+
+    .summary-card.full {
+      grid-column: span 2;
+    }
+
+    .summary-label {
+      font-size: 12px;
+      color: var(--neutral-500);
+      margin-bottom: 4px;
+    }
+
+    .summary-value {
+      font-family: 'Roboto Mono', monospace;
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    .summary-value.positive { color: var(--primary); }
+    .summary-value.negative { color: var(--danger); }
+
+    /* Schedule Table */
+    .schedule-section {
+      padding: 0 24px 24px;
+    }
+
+    .schedule-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .schedule-title {
+      font-family: 'Nunito', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .schedule-toggle {
+      font-size: 14px;
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    .schedule-table {
+      background: white;
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    .schedule-row {
+      display: flex;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--neutral-100);
+      font-size: 13px;
+    }
+
+    .schedule-row.header {
+      background: var(--neutral-100);
+      font-weight: 600;
+      font-size: 11px;
+      color: var(--neutral-500);
+    }
+
+    .schedule-row:last-child {
+      border-bottom: none;
+    }
+
+    .schedule-col {
+      flex: 1;
+      text-align: right;
+    }
+
+    .schedule-col:first-child {
+      text-align: left;
+      flex: 0.5;
+    }
+
+    .schedule-col.mono {
+      font-family: 'Roboto Mono', monospace;
+    }
+
+    /* Action Buttons */
+    .action-buttons {
+      display: flex;
+      gap: 12px;
+      padding: 24px;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 14px;
+      border-radius: 12px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-outline { background: transparent; border: 2px solid var(--primary); color: var(--primary); }
+    .btn-secondary { background: var(--secondary); color: white; }
+
+    /* Tracker Styles */
+    .tracker-header {
+      padding: 20px 24px;
+    }
+
+    .tracker-title {
+      font-family: 'Nunito', sans-serif;
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--neutral-900);
+      margin-bottom: 8px;
+    }
+
+    .tracker-subtitle {
+      font-size: 14px;
+      color: var(--neutral-500);
+    }
+
+    .progress-overview {
+      background: linear-gradient(135deg, var(--primary), #1B5E20);
+      margin: 0 24px;
+      border-radius: 20px;
+      padding: 24px;
+      color: white;
+      margin-bottom: 24px;
+    }
+
+    .progress-label {
+      font-size: 14px;
+      opacity: 0.9;
+      margin-bottom: 8px;
+    }
+
+    .progress-amount {
+      font-family: 'Roboto Mono', monospace;
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    .progress-bar {
+      height: 12px;
+      background: rgba(255,255,255,0.3);
+      border-radius: 6px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: white;
+      border-radius: 6px;
+    }
+
+    .progress-stats {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      opacity: 0.9;
+    }
+
+    /* Debt List */
+    .debt-list {
+      padding: 0 24px;
+    }
+
+    .debt-list-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .debt-list-title {
+      font-family: 'Nunito', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .debt-item {
+      background: white;
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    .debt-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 16px;
+    }
+
+    .debt-item-name {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .debt-item-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+
+    .debt-item-title {
+      font-weight: 600;
+      font-size: 16px;
+    }
+
+    .debt-item-due {
+      font-size: 12px;
+      color: var(--neutral-500);
+    }
+
+    .debt-item-balance {
+      text-align: right;
+    }
+
+    .debt-item-balance-label {
+      font-size: 11px;
+      color: var(--neutral-500);
+    }
+
+    .debt-item-balance-value {
+      font-family: 'Roboto Mono', monospace;
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .debt-item-progress {
+      height: 8px;
+      background: var(--neutral-100);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+
+    .debt-item-progress-fill {
+      height: 100%;
+      background: var(--primary);
+      border-radius: 4px;
+    }
+
+    .debt-item-stats {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--neutral-500);
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 60px 40px;
+    }
+
+    .empty-icon {
+      font-size: 64px;
+      margin-bottom: 16px;
+    }
+
+    .empty-title {
+      font-family: 'Nunito', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .empty-text {
+      font-size: 14px;
+      color: var(--neutral-500);
+      margin-bottom: 24px;
+    }
+
+    .btn-block {
+      width: 100%;
+      max-width: 200px;
+    }
+
+    /* Milestone Toast */
+    .milestone-toast {
+      position: absolute;
+      top: 60px;
+      left: 24px;
+      right: 24px;
+      background: linear-gradient(135deg, #FFF8E1, #FFECB3);
+      border: 2px solid #FFD54F;
+      border-radius: 16px;
+      padding: 16px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      z-index: 100;
+    }
+
+    .milestone-badge {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, #FFD54F, #FFC107);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+
+    .milestone-content {
+      flex: 1;
+    }
+
+    .milestone-title {
+      font-family: 'Nunito', sans-serif;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .milestone-text {
+      font-size: 12px;
+      color: var(--neutral-700);
+    }
+
+    .milestone-close {
+      font-size: 20px;
+      color: var(--neutral-500);
+      cursor: pointer;
+    }
+
+    /* Add Button FAB */
+    .fab {
+      position: absolute;
+      bottom: 100px;
+      right: 24px;
+      width: 56px;
+      height: 56px;
+      background: var(--primary);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 28px;
+      box-shadow: 0 4px 16px rgba(46, 125, 50, 0.4);
+    }
+  </style>
+</head>
+<body>
+  <h1>Results & Schedule Screens</h1>
+
+  <div class="section-title">Loan Results Summary</div>
+  <div class="screens-row">
+    <div class="screen-container">
+      <div class="screen-label">Results: Summary View</div>
+      <div class="phone-frame">
+        <div class="screen-content">
+          <div class="results-header">
+            <div class="results-icon">✅</div>
+            <div class="results-title">Simulacao Concluida!</div>
+            <div class="results-subtitle">Emprestimo de R$ 36.000 em 24 meses</div>
+          </div>
+
+          <div class="summary-grid">
+            <div class="summary-card">
+              <div class="summary-label">Parcela mensal</div>
+              <div class="summary-value">R$ 1.850</div>
+            </div>
+            <div class="summary-card">
+              <div class="summary-label">Taxa mensal</div>
+              <div class="summary-value">2,0% a.m.</div>
+            </div>
+            <div class="summary-card">
+              <div class="summary-label">Total de juros</div>
+              <div class="summary-value negative">R$ 8.400</div>
+            </div>
+            <div class="summary-card">
+              <div class="summary-label">Custo total</div>
+              <div class="summary-value">R$ 44.400</div>
+            </div>
+            <div class="summary-card full" style="background: rgba(46,125,50,0.1); border: 2px solid var(--primary-light);">
+              <div class="summary-label" style="color: var(--primary);">Valor liquido na conta</div>
+              <div class="summary-value positive" style="font-size: 28px;">R$ 35.280</div>
+              <div style="font-size: 12px; color: var(--neutral-500); margin-top: 4px;">Apos taxas de R$ 720</div>
+            </div>
+          </div>
+
+          <div class="schedule-section">
+            <div class="schedule-header">
+              <div class="schedule-title">Cronograma</div>
+              <div class="schedule-toggle">Ver completo →</div>
+            </div>
+            <div class="schedule-table">
+              <div class="schedule-row header">
+                <div class="schedule-col">#</div>
+                <div class="schedule-col">Juros</div>
+                <div class="schedule-col">Amort.</div>
+                <div class="schedule-col">Parcela</div>
+                <div class="schedule-col">Saldo</div>
+              </div>
+              <div class="schedule-row">
+                <div class="schedule-col">1</div>
+                <div class="schedule-col mono">720</div>
+                <div class="schedule-col mono">1.130</div>
+                <div class="schedule-col mono">1.850</div>
+                <div class="schedule-col mono">34.870</div>
+              </div>
+              <div class="schedule-row">
+                <div class="schedule-col">2</div>
+                <div class="schedule-col mono">697</div>
+                <div class="schedule-col mono">1.153</div>
+                <div class="schedule-col mono">1.850</div>
+                <div class="schedule-col mono">33.717</div>
+              </div>
+              <div class="schedule-row">
+                <div class="schedule-col">3</div>
+                <div class="schedule-col mono">674</div>
+                <div class="schedule-col mono">1.176</div>
+                <div class="schedule-col mono">1.850</div>
+                <div class="schedule-col mono">32.541</div>
+              </div>
+              <div class="schedule-row" style="background: var(--neutral-100); color: var(--neutral-500); font-style: italic; justify-content: center;">
+                ... mais 21 parcelas ...
+              </div>
+            </div>
+          </div>
+
+          <div class="action-buttons">
+            <button class="btn btn-outline">📤 Exportar</button>
+            <button class="btn btn-primary">💾 Salvar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="screen-container">
+      <div class="screen-label">Results: Full Schedule</div>
+      <div class="phone-frame">
+        <div class="screen-content" style="height: 100%;">
+          <div style="padding: 16px 24px; display: flex; align-items: center; gap: 16px; background: white; border-bottom: 1px solid var(--neutral-100);">
+            <div style="width: 40px; height: 40px; border-radius: 12px; background: var(--neutral-100); display: flex; align-items: center; justify-content: center; font-size: 20px;">←</div>
+            <div style="flex: 1;">
+              <div style="font-family: 'Nunito', sans-serif; font-weight: 700;">Cronograma Completo</div>
+              <div style="font-size: 12px; color: var(--neutral-500);">24 parcelas - PRICE</div>
+            </div>
+            <div style="font-size: 24px;">📤</div>
+          </div>
+
+          <div style="padding: 16px 24px;">
+            <div class="schedule-table">
+              <div class="schedule-row header">
+                <div class="schedule-col">#</div>
+                <div class="schedule-col">Data</div>
+                <div class="schedule-col">Juros</div>
+                <div class="schedule-col">Amort.</div>
+                <div class="schedule-col">Total</div>
+                <div class="schedule-col">Saldo</div>
+              </div>
+              <div class="schedule-row">
+                <div class="schedule-col">1</div>
+                <div class="schedule-col" style="font-size: 11px;">15/02</div>
+                <div class="schedule-col mono">720</div>
+                <div class="schedule-col mono">1.130</div>
+                <div class="schedule-col mono" style="font-weight: 600;">1.850</div>
+                <div class="schedule-col mono">34.870</div>
+              </div>
+              <div class="schedule-row">
+                <div class="schedule-col">2</div>
+                <div class="schedule-col" style="font-size: 11px;">15/03</div>
+                <div class="schedule-col mono">697</div>
+                <div class="schedule-col mono">1.153</div>
+                <div class="schedule-col mono" style="font-weight: 600;">1.850</div>
+                <div class="schedule-col mono">33.717</div>
+              </div>
+              <div class="schedule-row">
+                <div class="schedule-col">3</div>
+                <div class="schedule-col" style="font-size: 11px;">15/04</div>
+                <div class="schedule-col mono">674</div>
+                <div class="schedule-col mono">1.176</div>
+                <div class="schedule-col mono" style="font-weight: 600;">1.850</div>
+                <div class="schedule-col mono">32.541</div>
+              </div>
+              <div class="schedule-row">
+                <div class="schedule-col">4</div>
+                <div class="schedule-col" style="font-size: 11px;">15/05</div>
+                <div class="schedule-col mono">651</div>
+                <div class="schedule-col mono">1.199</div>
+                <div class="schedule-col mono" style="font-weight: 600;">1.850</div>
+                <div class="schedule-col mono">31.342</div>
+              </div>
+              <div class="schedule-row">
+                <div class="schedule-col">5</div>
+                <div class="schedule-col" style="font-size: 11px;">15/06</div>
+                <div class="schedule-col mono">627</div>
+                <div class="schedule-col mono">1.223</div>
+                <div class="schedule-col mono" style="font-weight: 600;">1.850</div>
+                <div class="schedule-col mono">30.119</div>
+              </div>
+              <div class="schedule-row">
+                <div class="schedule-col">6</div>
+                <div class="schedule-col" style="font-size: 11px;">15/07</div>
+                <div class="schedule-col mono">602</div>
+                <div class="schedule-col mono">1.248</div>
+                <div class="schedule-col mono" style="font-weight: 600;">1.850</div>
+                <div class="schedule-col mono">28.871</div>
+              </div>
+              <div class="schedule-row">
+                <div class="schedule-col">7</div>
+                <div class="schedule-col" style="font-size: 11px;">15/08</div>
+                <div class="schedule-col mono">577</div>
+                <div class="schedule-col mono">1.273</div>
+                <div class="schedule-col mono" style="font-weight: 600;">1.850</div>
+                <div class="schedule-col mono">27.598</div>
+              </div>
+              <div class="schedule-row">
+                <div class="schedule-col">8</div>
+                <div class="schedule-col" style="font-size: 11px;">15/09</div>
+                <div class="schedule-col mono">552</div>
+                <div class="schedule-col mono">1.298</div>
+                <div class="schedule-col mono" style="font-weight: 600;">1.850</div>
+                <div class="schedule-col mono">26.300</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h1 style="margin-top: 48px;">Debt Tracker (My Debts Tab)</h1>
+
+  <div class="section-title">Tracker States</div>
+  <div class="screens-row">
+    <div class="screen-container">
+      <div class="screen-label">Tracker: Empty State</div>
+      <div class="phone-frame">
+        <div class="screen-content">
+          <div class="tracker-header">
+            <div class="tracker-title">Minhas Dividas</div>
+            <div class="tracker-subtitle">Acompanhe seu progresso</div>
+          </div>
+
+          <div class="empty-state">
+            <div class="empty-icon">📊</div>
+            <div class="empty-title">Nenhuma divida cadastrada</div>
+            <div class="empty-text">Adicione suas dividas para acompanhar o progresso de quitacao</div>
+            <button class="btn btn-primary btn-block">+ Adicionar Divida</button>
+          </div>
+        </div>
+
+        <div class="tab-bar">
+          <div class="tab-item">
+            <div class="icon">🏠</div>
+            <span>Inicio</span>
+          </div>
+          <div class="tab-item">
+            <div class="icon">📊</div>
+            <span>Simular</span>
+          </div>
+          <div class="tab-item active">
+            <div class="icon">💳</div>
+            <span>Dividas</span>
+          </div>
+          <div class="tab-item">
+            <div class="icon">📚</div>
+            <span>Aprender</span>
+          </div>
+          <div class="tab-item">
+            <div class="icon">👤</div>
+            <span>Perfil</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="screen-container">
+      <div class="screen-label">Tracker: With Debts</div>
+      <div class="phone-frame">
+        <div class="screen-content">
+          <div class="tracker-header">
+            <div class="tracker-title">Minhas Dividas</div>
+            <div class="tracker-subtitle">Acompanhe seu progresso</div>
+          </div>
+
+          <div class="progress-overview">
+            <div class="progress-label">Total ja pago</div>
+            <div class="progress-amount">R$ 4.150</div>
+            <div class="progress-bar">
+              <div class="progress-fill" style="width: 38%;"></div>
+            </div>
+            <div class="progress-stats">
+              <span>38% quitado</span>
+              <span>Faltam R$ 6.850</span>
+            </div>
+          </div>
+
+          <div class="debt-list">
+            <div class="debt-list-header">
+              <div class="debt-list-title">Dividas ativas</div>
+              <div style="font-size: 14px; color: var(--primary); font-weight: 600;">2 dividas</div>
+            </div>
+
+            <div class="debt-item">
+              <div class="debt-item-header">
+                <div class="debt-item-name">
+                  <div class="debt-item-icon" style="background: linear-gradient(135deg, #E3F2FD, #BBDEFB);">💳</div>
+                  <div>
+                    <div class="debt-item-title">Cartao Nubank</div>
+                    <div class="debt-item-due">Vence dia 15</div>
+                  </div>
+                </div>
+                <div class="debt-item-balance">
+                  <div class="debt-item-balance-label">Saldo atual</div>
+                  <div class="debt-item-balance-value">R$ 3.200</div>
+                </div>
+              </div>
+              <div class="debt-item-progress">
+                <div class="debt-item-progress-fill" style="width: 45%;"></div>
+              </div>
+              <div class="debt-item-stats">
+                <span>45% pago</span>
+                <span>Meta: Mar 2025</span>
+              </div>
+            </div>
+
+            <div class="debt-item">
+              <div class="debt-item-header">
+                <div class="debt-item-name">
+                  <div class="debt-item-icon" style="background: linear-gradient(135deg, #FFF3E0, #FFE0B2);">🏦</div>
+                  <div>
+                    <div class="debt-item-title">Emprestimo BB</div>
+                    <div class="debt-item-due">Vence dia 10</div>
+                  </div>
+                </div>
+                <div class="debt-item-balance">
+                  <div class="debt-item-balance-label">Saldo atual</div>
+                  <div class="debt-item-balance-value">R$ 3.650</div>
+                </div>
+              </div>
+              <div class="debt-item-progress">
+                <div class="debt-item-progress-fill" style="width: 30%;"></div>
+              </div>
+              <div class="debt-item-stats">
+                <span>30% pago</span>
+                <span>Meta: Jul 2025</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="fab">+</div>
+
+        <div class="tab-bar">
+          <div class="tab-item">
+            <div class="icon">🏠</div>
+            <span>Inicio</span>
+          </div>
+          <div class="tab-item">
+            <div class="icon">📊</div>
+            <span>Simular</span>
+          </div>
+          <div class="tab-item active">
+            <div class="icon">💳</div>
+            <span>Dividas</span>
+          </div>
+          <div class="tab-item">
+            <div class="icon">📚</div>
+            <span>Aprender</span>
+          </div>
+          <div class="tab-item">
+            <div class="icon">👤</div>
+            <span>Perfil</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="screen-container">
+      <div class="screen-label">Tracker: Milestone Celebration</div>
+      <div class="phone-frame">
+        <div class="milestone-toast">
+          <div class="milestone-badge">🎉</div>
+          <div class="milestone-content">
+            <div class="milestone-title">Parabens! 50% quitado!</div>
+            <div class="milestone-text">Voce ja pagou metade do Cartao Nubank</div>
+          </div>
+          <div class="milestone-close">×</div>
+        </div>
+
+        <div class="screen-content">
+          <div class="tracker-header">
+            <div class="tracker-title">Minhas Dividas</div>
+            <div class="tracker-subtitle">Acompanhe seu progresso</div>
+          </div>
+
+          <div class="progress-overview">
+            <div class="progress-label">Total ja pago</div>
+            <div class="progress-amount">R$ 5.500</div>
+            <div class="progress-bar">
+              <div class="progress-fill" style="width: 50%;"></div>
+            </div>
+            <div class="progress-stats">
+              <span>50% quitado 🎉</span>
+              <span>Faltam R$ 5.500</span>
+            </div>
+          </div>
+
+          <div class="debt-list">
+            <div class="debt-list-header">
+              <div class="debt-list-title">Dividas ativas</div>
+            </div>
+
+            <div class="debt-item" style="border: 2px solid #FFD54F; background: rgba(255, 213, 79, 0.05);">
+              <div class="debt-item-header">
+                <div class="debt-item-name">
+                  <div class="debt-item-icon" style="background: linear-gradient(135deg, #E3F2FD, #BBDEFB);">💳</div>
+                  <div>
+                    <div class="debt-item-title">Cartao Nubank</div>
+                    <div class="debt-item-due" style="color: var(--primary); font-weight: 600;">🏆 Metade do caminho!</div>
+                  </div>
+                </div>
+                <div class="debt-item-balance">
+                  <div class="debt-item-balance-label">Saldo atual</div>
+                  <div class="debt-item-balance-value" style="color: var(--primary);">R$ 2.600</div>
+                </div>
+              </div>
+              <div class="debt-item-progress">
+                <div class="debt-item-progress-fill" style="width: 50%; background: linear-gradient(90deg, var(--primary), #FFD54F);"></div>
+              </div>
+              <div class="debt-item-stats">
+                <span style="color: var(--primary); font-weight: 600;">50% pago!</span>
+                <span>Meta: Fev 2025</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="fab">+</div>
+
+        <div class="tab-bar">
+          <div class="tab-item">
+            <div class="icon">🏠</div>
+            <span>Inicio</span>
+          </div>
+          <div class="tab-item">
+            <div class="icon">📊</div>
+            <span>Simular</span>
+          </div>
+          <div class="tab-item active">
+            <div class="icon">💳</div>
+            <span>Dividas</span>
+          </div>
+          <div class="tab-item">
+            <div class="icon">📚</div>
+            <span>Aprender</span>
+          </div>
+          <div class="tab-item">
+            <div class="icon">👤</div>
+            <span>Perfil</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

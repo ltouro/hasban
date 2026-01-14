@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=375, initial-scale=1">
+  <title>SimulaCredito - Onboarding Screens</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Inter:wght@400;500;600&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #2E7D32;
+      --primary-light: #4CAF50;
+      --secondary: #FF6B35;
+      --danger: #C62828;
+      --neutral-900: #212121;
+      --neutral-700: #455A64;
+      --neutral-500: #78909C;
+      --neutral-300: #B0BEC5;
+      --neutral-100: #ECEFF1;
+      --background: #FAFAFA;
+      --card: #FFFFFF;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #1a1a2e;
+      padding: 40px;
+      color: var(--neutral-900);
+    }
+
+    h1 {
+      font-family: 'Nunito', sans-serif;
+      font-size: 28px;
+      font-weight: 800;
+      color: white;
+      margin-bottom: 32px;
+    }
+
+    .screens-row {
+      display: flex;
+      gap: 24px;
+      margin-bottom: 48px;
+      flex-wrap: wrap;
+    }
+
+    .screen-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .screen-label {
+      color: white;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      text-align: center;
+    }
+
+    .phone-frame {
+      width: 375px;
+      height: 812px;
+      background: var(--background);
+      border-radius: 40px;
+      overflow: hidden;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+      position: relative;
+    }
+
+    .status-bar {
+      height: 44px;
+      background: transparent;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 24px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .screen-content {
+      height: calc(100% - 44px);
+      overflow-y: auto;
+      position: relative;
+    }
+
+    /* Welcome Screen Styles */
+    .welcome-screen {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      background: linear-gradient(180deg, #2E7D32 0%, #1B5E20 100%);
+      color: white;
+      padding: 40px 24px;
+    }
+
+    .welcome-logo {
+      width: 80px;
+      height: 80px;
+      background: white;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
+      margin-bottom: 24px;
+    }
+
+    .welcome-title {
+      font-family: 'Nunito', sans-serif;
+      font-size: 32px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .welcome-subtitle {
+      font-size: 16px;
+      opacity: 0.9;
+      margin-bottom: 40px;
+    }
+
+    .welcome-illustration {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 120px;
+    }
+
+    .welcome-carousel {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .carousel-title {
+      font-family: 'Nunito', sans-serif;
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .carousel-text {
+      font-size: 14px;
+      opacity: 0.9;
+      line-height: 1.5;
+    }
+
+    .carousel-dots {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 32px;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.4);
+    }
+
+    .dot.active {
+      background: white;
+      width: 24px;
+      border-radius: 4px;
+    }
+
+    .welcome-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .btn {
+      padding: 16px 24px;
+      border-radius: 12px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      text-align: center;
+    }
+
+    .btn-white {
+      background: white;
+      color: var(--primary);
+    }
+
+    .btn-ghost-white {
+      background: transparent;
+      color: white;
+      border: 2px solid rgba(255,255,255,0.3);
+    }
+
+    /* Profile Setup Styles */
+    .profile-screen {
+      height: 100%;
+      background: var(--background);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .profile-header {
+      margin-bottom: 32px;
+    }
+
+    .profile-title {
+      font-family: 'Nunito', sans-serif;
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--neutral-900);
+      margin-bottom: 8px;
+    }
+
+    .profile-subtitle {
+      font-size: 14px;
+      color: var(--neutral-500);
+    }
+
+    .wizard-progress {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 32px;
+    }
+
+    .wizard-step {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+      background: var(--neutral-100);
+      color: var(--neutral-500);
+    }
+
+    .wizard-step.active {
+      background: var(--primary);
+      color: white;
+    }
+
+    .wizard-step.completed {
+      background: var(--primary);
+      color: white;
+    }
+
+    .wizard-line {
+      width: 40px;
+      height: 2px;
+      background: var(--neutral-100);
+    }
+
+    .wizard-line.completed {
+      background: var(--primary);
+    }
+
+    .form-section {
+      flex: 1;
+    }
+
+    .form-question {
+      font-family: 'Nunito', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--neutral-900);
+      margin-bottom: 24px;
+    }
+
+    .selection-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .selection-card {
+      background: white;
+      border: 2px solid var(--neutral-100);
+      border-radius: 16px;
+      padding: 20px 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .selection-card:hover {
+      border-color: var(--neutral-300);
+    }
+
+    .selection-card.selected {
+      border-color: var(--primary);
+      background: rgba(46, 125, 50, 0.05);
+    }
+
+    .selection-card .icon {
+      font-size: 32px;
+      margin-bottom: 8px;
+    }
+
+    .selection-card .label {
+      font-weight: 600;
+      color: var(--neutral-900);
+      font-size: 14px;
+    }
+
+    .selection-card .sublabel {
+      font-size: 11px;
+      color: var(--neutral-500);
+      margin-top: 4px;
+    }
+
+    .slider-section {
+      margin-bottom: 32px;
+    }
+
+    .slider-value {
+      font-family: 'Roboto Mono', monospace;
+      font-size: 32px;
+      font-weight: 500;
+      color: var(--neutral-900);
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    .slider-track {
+      height: 8px;
+      background: var(--neutral-100);
+      border-radius: 4px;
+      position: relative;
+    }
+
+    .slider-fill {
+      height: 100%;
+      background: var(--primary);
+      border-radius: 4px;
+      width: 40%;
+    }
+
+    .slider-thumb {
+      width: 28px;
+      height: 28px;
+      background: var(--primary);
+      border-radius: 50%;
+      position: absolute;
+      top: 50%;
+      left: 40%;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 2px 8px rgba(46, 125, 50, 0.3);
+    }
+
+    .slider-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 12px;
+      font-size: 12px;
+      color: var(--neutral-500);
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+      width: 100%;
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--primary);
+      width: 100%;
+    }
+
+    .bottom-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: auto;
+    }
+
+    /* Yes/No Selection */
+    .yes-no-grid {
+      display: flex;
+      gap: 12px;
+    }
+
+    .yes-no-card {
+      flex: 1;
+      background: white;
+      border: 2px solid var(--neutral-100);
+      border-radius: 16px;
+      padding: 24px;
+      text-align: center;
+      cursor: pointer;
+    }
+
+    .yes-no-card.selected {
+      border-color: var(--primary);
+      background: rgba(46, 125, 50, 0.05);
+    }
+
+    .yes-no-card .icon {
+      font-size: 40px;
+      margin-bottom: 12px;
+    }
+
+    .yes-no-card .label {
+      font-weight: 700;
+      font-size: 16px;
+    }
+
+    /* Tutorial Screen */
+    .tutorial-screen {
+      height: 100%;
+      background: var(--background);
+      position: relative;
+    }
+
+    .tutorial-header {
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .tutorial-skip {
+      color: var(--neutral-500);
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .tutorial-content {
+      padding: 24px;
+    }
+
+    .tutorial-card {
+      background: white;
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+      margin-bottom: 24px;
+    }
+
+    .tutorial-illustration {
+      height: 160px;
+      background: linear-gradient(135deg, var(--primary-light), var(--primary));
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 80px;
+      margin-bottom: 20px;
+    }
+
+    .tooltip-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .tooltip-box {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      max-width: 320px;
+    }
+
+    .tooltip-title {
+      font-family: 'Nunito', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .tooltip-text {
+      font-size: 14px;
+      color: var(--neutral-700);
+      line-height: 1.5;
+      margin-bottom: 16px;
+    }
+
+    .tooltip-button {
+      background: var(--primary);
+      color: white;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-weight: 600;
+      border: none;
+      width: 100%;
+    }
+
+    .tooltip-arrow {
+      position: absolute;
+      width: 0;
+      height: 0;
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+      border-bottom: 10px solid white;
+    }
+
+    /* Input fields in tutorial */
+    .input-group {
+      margin-bottom: 16px;
+    }
+
+    .input-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--neutral-700);
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    .input-field {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid var(--neutral-300);
+      border-radius: 12px;
+      font-size: 16px;
+    }
+
+    .input-currency {
+      position: relative;
+    }
+
+    .input-currency .prefix {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-family: 'Roboto Mono', monospace;
+      color: var(--neutral-500);
+    }
+
+    .input-currency input {
+      padding-left: 48px;
+      font-family: 'Roboto Mono', monospace;
+    }
+
+    .highlight-ring {
+      box-shadow: 0 0 0 4px rgba(46, 125, 50, 0.3);
+      border-color: var(--primary) !important;
+    }
+
+    .section-title {
+      font-family: 'Nunito', sans-serif;
+      font-size: 24px;
+      font-weight: 800;
+      color: white;
+      margin: 48px 0 24px 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>Onboarding Flow</h1>
+
+  <!-- Welcome Carousel -->
+  <div class="section-title">Welcome Carousel (3 slides)</div>
+  <div class="screens-row">
+    <!-- Slide 1 -->
+    <div class="screen-container">
+      <div class="screen-label">Slide 1: Value Proposition</div>
+      <div class="phone-frame">
+        <div class="screen-content">
+          <div class="welcome-screen">
+            <div class="welcome-logo">💰</div>
+            <div class="welcome-title">SimulaCredito</div>
+            <div class="welcome-subtitle">Seu dinheiro, suas regras</div>
+
+            <div class="welcome-illustration">📊</div>
+
+            <div class="welcome-carousel">
+              <div class="carousel-title">Entenda suas dividas</div>
+              <div class="carousel-text">Descubra quanto voce realmente paga em juros e taxas ocultas</div>
+            </div>
+
+            <div class="carousel-dots">
+              <div class="dot active"></div>
+              <div class="dot"></div>
+              <div class="dot"></div>
+            </div>
+
+            <div class="welcome-buttons">
+              <button class="btn btn-white">Comecar</button>
+              <button class="btn btn-ghost-white">Ja tenho conta</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 2 -->
+    <div class="screen-container">
+      <div class="screen-label">Slide 2: Savings Discovery</div>
+      <div class="phone-frame">
+        <div class="screen-content">
+          <div class="welcome-screen">
+            <div class="welcome-logo">💰</div>
+            <div class="welcome-title">SimulaCredito</div>
+            <div class="welcome-subtitle">Seu dinheiro, suas regras</div>
+
+            <div class="welcome-illustration">💸</div>
+
+            <div class="welcome-carousel">
+              <div class="carousel-title">Economize de verdade</div>
+              <div class="carousel-text">Compare taxas e encontre as melhores opcoes para refinanciar</div>
+            </div>
+
+            <div class="carousel-dots">
+              <div class="dot"></div>
+              <div class="dot active"></div>
+              <div class="dot"></div>
+            </div>
+
+            <div class="welcome-buttons">
+              <button class="btn btn-white">Comecar</button>
+              <button class="btn btn-ghost-white">Pular</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 3 -->
+    <div class="screen-container">
+      <div class="screen-label">Slide 3: Debt Freedom</div>
+      <div class="phone-frame">
+        <div class="screen-content">
+          <div class="welcome-screen">
+            <div class="welcome-logo">💰</div>
+            <div class="welcome-title">SimulaCredito</div>
+            <div class="welcome-subtitle">Seu dinheiro, suas regras</div>
+
+            <div class="welcome-illustration">🎯</div>
+
+            <div class="welcome-carousel">
+              <div class="carousel-title">Liberdade financeira</div>
+              <div class="carousel-text">Trace um plano para sair das dividas e conquiste seus objetivos</div>
+            </div>
+
+            <div class="carousel-dots">
+              <div class="dot"></div>
+              <div class="dot"></div>
+              <div class="dot active"></div>
+            </div>
+
+            <div class="welcome-buttons">
+              <button class="btn btn-white">Comecar Agora</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Profile Setup -->
+  <div class="section-title">Profile Setup Wizard (3 steps)</div>
+  <div class="screens-row">
+    <!-- Step 1: Employment -->
+    <div class="screen-container">
+      <div class="screen-label">Step 1: Employment Status</div>
+      <div class="phone-frame">
+        <div class="screen-content">
+          <div class="profile-screen">
+            <div class="wizard-progress">
+              <div class="wizard-step active">1</div>
+              <div class="wizard-line"></div>
+              <div class="wizard-step">2</div>
+              <div class="wizard-line"></div>
+              <div class="wizard-step">3</div>
+            </div>
+
+            <div class="profile-header">
+              <div class="profile-title">Vamos comecar!</div>
+              <div class="profile-subtitle">Algumas perguntas rapidas para personalizar sua experiencia</div>
+            </div>
+
+            <div class="form-section">
+              <div class="form-question">Qual sua situacao profissional?</div>
+
+              <div class="selection-grid">
+                <div class="selection-card selected">
+                  <div class="icon">💼</div>
+                  <div class="label">Empregado</div>
+                  <div class="sublabel">CLT ou contrato</div>
+                </div>
+                <div class="selection-card">
+                  <div class="icon">🏢</div>
+                  <div class="label">Autonomo</div>
+                  <div class="sublabel">MEI, PJ ou freelancer</div>
+                </div>
+                <div class="selection-card">
+                  <div class="icon">🎓</div>
+                  <div class="label">Estudante</div>
+                  <div class="sublabel">Sem renda fixa</div>
+                </div>
+                <div class="selection-card">
+                  <div class="icon">🌴</div>
+                  <div class="label">Aposentado</div>
+                  <div class="sublabel">INSS ou privado</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="bottom-buttons">
+              <button class="btn btn-primary">Continuar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2: Income -->
+    <div class="screen-container">
+      <div class="screen-label">Step 2: Monthly Income</div>
+      <div class="phone-frame">
+        <div class="screen-content">
+          <div class="profile-screen">
+            <div class="wizard-progress">
+              <div class="wizard-step completed">✓</div>
+              <div class="wizard-line completed"></div>
+              <div class="wizard-step active">2</div>
+              <div class="wizard-line"></div>
+              <div class="wizard-step">3</div>
+            </div>
+
+            <div class="profile-header">
+              <div class="profile-title">Sua renda</div>
+              <div class="profile-subtitle">Isso nos ajuda a estimar taxas compativeis com seu perfil</div>
+            </div>
+
+            <div class="form-section">
+              <div class="form-question">Qual sua renda mensal?</div>
+
+              <div class="slider-section">
+                <div class="slider-value">R$ 5.000</div>
+                <div class="slider-track">
+                  <div class="slider-fill"></div>
+                  <div class="slider-thumb"></div>
+                </div>
+                <div class="slider-labels">
+                  <span>R$ 0</span>
+                  <span>R$ 50.000+</span>
+                </div>
+              </div>
+
+              <div style="background: rgba(46,125,50,0.1); border-radius: 12px; padding: 16px; margin-top: 24px;">
+                <div style="font-size: 12px; color: var(--neutral-500); margin-bottom: 4px;">Com essa renda, voce pode pagar ate:</div>
+                <div style="font-family: 'Roboto Mono', monospace; font-size: 24px; color: var(--primary); font-weight: 500;">R$ 1.500/mes</div>
+                <div style="font-size: 11px; color: var(--neutral-500);">em parcelas (30% da renda)</div>
+              </div>
+            </div>
+
+            <div class="bottom-buttons">
+              <button class="btn btn-primary">Continuar</button>
+              <button class="btn btn-secondary">Voltar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3: Existing Debts -->
+    <div class="screen-container">
+      <div class="screen-label">Step 3: Existing Debts</div>
+      <div class="phone-frame">
+        <div class="screen-content">
+          <div class="profile-screen">
+            <div class="wizard-progress">
+              <div class="wizard-step completed">✓</div>
+              <div class="wizard-line completed"></div>
+              <div class="wizard-step completed">✓</div>
+              <div class="wizard-line completed"></div>
+              <div class="wizard-step active">3</div>
+            </div>
+
+            <div class="profile-header">
+              <div class="profile-title">Suas dividas</div>
+              <div class="profile-subtitle">Queremos ajudar voce a organizar suas financas</div>
+            </div>
+
+            <div class="form-section">
+              <div class="form-question">Voce tem dividas atualmente?</div>
+
+              <div class="yes-no-grid">
+                <div class="yes-no-card selected">
+                  <div class="icon">📋</div>
+                  <div class="label">Sim, tenho</div>
+                </div>
+                <div class="yes-no-card">
+                  <div class="icon">✨</div>
+                  <div class="label">Nao, estou livre</div>
+                </div>
+              </div>
+
+              <div style="margin-top: 24px; padding: 16px; background: rgba(255,107,53,0.1); border-radius: 12px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <span style="font-size: 24px;">💡</span>
+                  <div>
+                    <div style="font-weight: 600; font-size: 14px; color: var(--neutral-900);">Sem julgamentos!</div>
+                    <div style="font-size: 12px; color: var(--neutral-700);">Estamos aqui para ajudar, nao para julgar. Quanto mais soubermos, melhor poderemos ajudar.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="bottom-buttons">
+              <button class="btn btn-primary">Finalizar Perfil</button>
+              <button class="btn btn-secondary">Voltar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Interactive Tutorial -->
+  <div class="section-title">Interactive Tutorial</div>
+  <div class="screens-row">
+    <!-- Tutorial Start -->
+    <div class="screen-container">
+      <div class="screen-label">Tutorial: Introduction</div>
+      <div class="phone-frame">
+        <div class="screen-content">
+          <div class="tutorial-screen">
+            <div class="tutorial-header">
+              <div style="font-family: 'Nunito', sans-serif; font-weight: 700;">Tutorial</div>
+              <div class="tutorial-skip">Pular</div>
+            </div>
+
+            <div class="tutorial-content">
+              <div class="tutorial-illustration">🎓</div>
+
+              <div style="text-align: center; margin-bottom: 32px;">
+                <div style="font-family: 'Nunito', sans-serif; font-size: 24px; font-weight: 800; margin-bottom: 12px;">
+                  Vamos fazer sua primeira simulacao!
+                </div>
+                <div style="font-size: 14px; color: var(--neutral-700); line-height: 1.5;">
+                  Em menos de 1 minuto voce vai entender como usar o app para economizar dinheiro.
+                </div>
+              </div>
+
+              <div style="background: white; border-radius: 16px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+                <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 16px;">
+                  <div style="width: 48px; height: 48px; background: var(--primary); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px;">1</div>
+                  <div>
+                    <div style="font-weight: 600;">Informe os dados</div>
+                    <div style="font-size: 12px; color: var(--neutral-500);">Valor, taxa e prazo</div>
+                  </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 16px;">
+                  <div style="width: 48px; height: 48px; background: var(--neutral-100); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--neutral-500); font-size: 24px;">2</div>
+                  <div>
+                    <div style="font-weight: 600; color: var(--neutral-500);">Veja os resultados</div>
+                    <div style="font-size: 12px; color: var(--neutral-500);">Parcela e custo total</div>
+                  </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 16px;">
+                  <div style="width: 48px; height: 48px; background: var(--neutral-100); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--neutral-500); font-size: 24px;">3</div>
+                  <div>
+                    <div style="font-weight: 600; color: var(--neutral-500);">Compare opcoes</div>
+                    <div style="font-size: 12px; color: var(--neutral-500);">Encontre a melhor</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div style="padding: 24px;">
+              <button class="btn btn-primary">Comecar Tutorial</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tutorial with Tooltip -->
+    <div class="screen-container">
+      <div class="screen-label">Tutorial: Guided Input</div>
+      <div class="phone-frame">
+        <div class="screen-content">
+          <div class="tutorial-screen">
+            <div class="tutorial-header">
+              <div style="font-family: 'Nunito', sans-serif; font-weight: 700;">Simulacao Rapida</div>
+              <div class="tutorial-skip">1/3</div>
+            </div>
+
+            <div class="tutorial-content">
+              <div class="input-group">
+                <label class="input-label">Valor do emprestimo</label>
+                <div class="input-currency">
+                  <span class="prefix">R$</span>
+                  <input type="text" class="input-field highlight-ring" value="10.000">
+                </div>
+              </div>
+
+              <div class="input-group" style="opacity: 0.5;">
+                <label class="input-label">Taxa de juros (% ao mes)</label>
+                <input type="text" class="input-field" placeholder="Ex: 2,5">
+              </div>
+
+              <div class="input-group" style="opacity: 0.5;">
+                <label class="input-label">Prazo em meses</label>
+                <input type="text" class="input-field" placeholder="Ex: 24">
+              </div>
+            </div>
+
+            <!-- Tooltip Overlay -->
+            <div class="tooltip-overlay">
+              <div style="position: relative;">
+                <div class="tooltip-box">
+                  <div class="tooltip-title">Valor do emprestimo</div>
+                  <div class="tooltip-text">
+                    Digite quanto voce quer pegar emprestado ou quanto ja deve. Vamos comecar com R$ 10.000 como exemplo.
+                  </div>
+                  <button class="tooltip-button">Entendi!</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tutorial Complete -->
+    <div class="screen-container">
+      <div class="screen-label">Tutorial: Complete</div>
+      <div class="phone-frame">
+        <div class="screen-content">
+          <div class="tutorial-screen" style="background: linear-gradient(180deg, var(--primary) 0%, #1B5E20 100%); color: white;">
+            <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; text-align: center;">
+              <div style="font-size: 80px; margin-bottom: 24px;">🎉</div>
+              <div style="font-family: 'Nunito', sans-serif; font-size: 28px; font-weight: 800; margin-bottom: 12px;">
+                Parabens!
+              </div>
+              <div style="font-size: 16px; opacity: 0.9; margin-bottom: 32px; line-height: 1.5;">
+                Voce completou sua primeira simulacao e ja sabe usar o app!
+              </div>
+
+              <div style="background: rgba(255,255,255,0.15); border-radius: 16px; padding: 20px; width: 100%; margin-bottom: 24px;">
+                <div style="font-size: 14px; opacity: 0.8; margin-bottom: 8px;">Conquista desbloqueada!</div>
+                <div style="display: flex; align-items: center; justify-content: center; gap: 12px;">
+                  <span style="font-size: 32px;">🏆</span>
+                  <div style="text-align: left;">
+                    <div style="font-weight: 700;">Primeiros Passos</div>
+                    <div style="font-size: 12px; opacity: 0.8;">+10 XP</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div style="padding: 24px;">
+              <button class="btn btn-white" style="width: 100%;">Ir para o App</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=375, initial-scale=1">
+  <title>SimulaCredito - Debt Escape Planning</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Inter:wght@400;500;600&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #2E7D32;
+      --primary-light: #4CAF50;
+      --secondary: #FF6B35;
+      --danger: #C62828;
+      --danger-light: #EF5350;
+      --warning: #F9A825;
+      --neutral-900: #212121;
+      --neutral-700: #455A64;
+      --neutral-500: #78909C;
+      --neutral-300: #B0BEC5;
+      --neutral-100: #ECEFF1;
+      --background: #FAFAFA;
+      --card: #FFFFFF;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #1a1a2e;
+      padding: 40px;
+      color: var(--neutral-900);
+    }
+
+    h1, .section-title {
+      font-family: 'Nunito', sans-serif;
+      font-size: 28px;
+      font-weight: 800;
+      color: white;
+      margin-bottom: 32px;
+    }
+
+    .section-title { margin-top: 48px; }
+
+    .screens-row {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+
+    .screen-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .screen-label {
+      color: white;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      text-align: center;
+    }
+
+    .phone-frame {
+      width: 375px;
+      height: 812px;
+      background: var(--background);
+      border-radius: 40px;
+      overflow: hidden;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+      position: relative;
+    }
+
+    .screen-content {
+      height: 100%;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .wizard-header {
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: white;
+      border-bottom: 1px solid var(--neutral-100);
+    }
+
+    .back-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: var(--neutral-100);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+
+    .wizard-title {
+      font-family: 'Nunito', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      flex: 1;
+    }
+
+    .wizard-content {
+      flex: 1;
+      padding: 24px;
+    }
+
+    .step-title {
+      font-family: 'Nunito', sans-serif;
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--neutral-900);
+      margin-bottom: 8px;
+    }
+
+    .step-subtitle {
+      font-size: 14px;
+      color: var(--neutral-500);
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+
+    .wizard-footer {
+      padding: 24px;
+      background: white;
+      border-top: 1px solid var(--neutral-100);
+    }
+
+    .btn {
+      width: 100%;
+      padding: 16px 24px;
+      border-radius: 12px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-secondary { background: transparent; color: var(--primary); margin-top: 12px; }
+    .btn-danger { background: var(--danger); color: white; }
+
+    /* Credit Card Input */
+    .debt-card {
+      background: white;
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      border: 2px solid transparent;
+    }
+
+    .debt-card.active {
+      border-color: var(--primary);
+    }
+
+    .debt-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .debt-card-name {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .debt-card-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, #1A237E, #3949AB);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 20px;
+    }
+
+    .debt-card-label {
+      font-weight: 600;
+    }
+
+    .debt-card-delete {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: var(--neutral-100);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .input-group {
+      flex: 1;
+    }
+
+    .input-group.small {
+      flex: 0.6;
+    }
+
+    .input-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--neutral-700);
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    .input-field {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid var(--neutral-300);
+      border-radius: 10px;
+      font-size: 14px;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .input-field:focus {
+      border-color: var(--primary);
+      outline: none;
+    }
+
+    .input-currency {
+      position: relative;
+    }
+
+    .input-currency .prefix {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 14px;
+      color: var(--neutral-500);
+    }
+
+    .input-currency input {
+      padding-left: 36px;
+      font-family: 'Roboto Mono', monospace;
+    }
+
+    .add-card-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 16px;
+      border: 2px dashed var(--neutral-300);
+      border-radius: 16px;
+      background: transparent;
+      color: var(--neutral-500);
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      margin-bottom: 24px;
+    }
+
+    .add-card-btn:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    /* Shock Value */
+    .shock-section {
+      background: linear-gradient(135deg, rgba(198, 40, 40, 0.05), rgba(198, 40, 40, 0.1));
+      border: 2px solid var(--danger-light);
+      border-radius: 20px;
+      padding: 24px;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+
+    .shock-emoji {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    .shock-title {
+      font-family: 'Nunito', sans-serif;
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--danger);
+      margin-bottom: 8px;
+    }
+
+    .shock-value {
+      font-family: 'Roboto Mono', monospace;
+      font-size: 48px;
+      font-weight: 700;
+      color: var(--danger);
+      margin-bottom: 8px;
+    }
+
+    .shock-subtitle {
+      font-size: 14px;
+      color: var(--neutral-700);
+    }
+
+    /* Debt Summary */
+    .debt-summary {
+      background: white;
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+
+    .debt-summary-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--neutral-100);
+    }
+
+    .debt-summary-row:last-child {
+      border-bottom: none;
+      font-weight: 600;
+    }
+
+    .debt-summary-row .label {
+      color: var(--neutral-500);
+      font-size: 14px;
+    }
+
+    .debt-summary-row .value {
+      font-family: 'Roboto Mono', monospace;
+      font-size: 14px;
+    }
+
+    /* Strategy Cards */
+    .strategy-card {
+      background: white;
+      border: 2px solid var(--neutral-100);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .strategy-card:hover {
+      border-color: var(--neutral-300);
+    }
+
+    .strategy-card.selected {
+      border-color: var(--primary);
+      background: rgba(46, 125, 50, 0.02);
+    }
+
+    .strategy-card.recommended {
+      position: relative;
+    }
+
+    .strategy-card.recommended::before {
+      content: '⭐ Recomendado';
+      position: absolute;
+      top: -10px;
+      right: 16px;
+      background: var(--warning);
+      color: white;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+
+    .strategy-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+
+    .strategy-name {
+      font-family: 'Nunito', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .strategy-icon {
+      font-size: 24px;
+    }
+
+    .strategy-desc {
+      font-size: 13px;
+      color: var(--neutral-500);
+      margin-bottom: 16px;
+      line-height: 1.4;
+    }
+
+    .strategy-stats {
+      display: flex;
+      gap: 24px;
+    }
+
+    .strategy-stat {
+      flex: 1;
+    }
+
+    .strategy-stat .label {
+      font-size: 11px;
+      color: var(--neutral-500);
+      margin-bottom: 2px;
+    }
+
+    .strategy-stat .value {
+      font-family: 'Roboto Mono', monospace;
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .strategy-stat .value.positive {
+      color: var(--primary);
+    }
+
+    /* Budget Input */
+    .budget-section {
+      background: white;
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+
+    .budget-label {
+      font-size: 14px;
+      color: var(--neutral-700);
+      margin-bottom: 4px;
+    }
+
+    .budget-hint {
+      font-size: 12px;
+      color: var(--neutral-500);
+      margin-bottom: 16px;
+    }
+
+    .budget-value {
+      font-family: 'Roboto Mono', monospace;
+      font-size: 36px;
+      font-weight: 600;
+      text-align: center;
+      color: var(--primary);
+      margin-bottom: 16px;
+    }
+
+    .slider-track {
+      height: 8px;
+      background: var(--neutral-100);
+      border-radius: 4px;
+      position: relative;
+    }
+
+    .slider-fill {
+      height: 100%;
+      background: var(--primary);
+      border-radius: 4px;
+    }
+
+    .slider-thumb {
+      width: 28px;
+      height: 28px;
+      background: var(--primary);
+      border-radius: 50%;
+      position: absolute;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 2px 8px rgba(46, 125, 50, 0.3);
+    }
+
+    .slider-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 12px;
+      font-size: 12px;
+      color: var(--neutral-500);
+    }
+
+    /* Timeline */
+    .timeline {
+      background: white;
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+
+    .timeline-title {
+      font-family: 'Nunito', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    .timeline-bar {
+      height: 24px;
+      background: var(--neutral-100);
+      border-radius: 12px;
+      display: flex;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+
+    .timeline-segment {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 600;
+      color: white;
+    }
+
+    .timeline-legend {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .timeline-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+    }
+
+    .timeline-legend-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+    }
+
+    /* Freedom Card */
+    .freedom-card {
+      background: linear-gradient(135deg, var(--primary), #1B5E20);
+      border-radius: 20px;
+      padding: 24px;
+      color: white;
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .freedom-emoji {
+      font-size: 48px;
+      margin-bottom: 12px;
+    }
+
+    .freedom-title {
+      font-family: 'Nunito', sans-serif;
+      font-size: 24px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .freedom-date {
+      font-size: 16px;
+      opacity: 0.9;
+      margin-bottom: 16px;
+    }
+
+    .freedom-stats {
+      display: flex;
+      gap: 16px;
+    }
+
+    .freedom-stat {
+      flex: 1;
+      background: rgba(255,255,255,0.15);
+      border-radius: 12px;
+      padding: 12px;
+    }
+
+    .freedom-stat .label {
+      font-size: 11px;
+      opacity: 0.8;
+      margin-bottom: 4px;
+    }
+
+    .freedom-stat .value {
+      font-family: 'Roboto Mono', monospace;
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    /* Milestones */
+    .milestones {
+      background: white;
+      border-radius: 16px;
+      padding: 20px;
+    }
+
+    .milestones-title {
+      font-family: 'Nunito', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    .milestone-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--neutral-100);
+    }
+
+    .milestone-item:last-child {
+      border-bottom: none;
+    }
+
+    .milestone-check {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--neutral-100);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+    }
+
+    .milestone-check.done {
+      background: var(--primary);
+      color: white;
+    }
+
+    .milestone-content {
+      flex: 1;
+    }
+
+    .milestone-name {
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .milestone-date {
+      font-size: 12px;
+      color: var(--neutral-500);
+    }
+  </style>
+</head>
+<body>
+  <h1>Debt Escape Planning</h1>
+
+  <div class="section-title">Step 1: Add Credit Cards</div>
+  <div class="screens-row">
+    <div class="screen-container">
+      <div class="screen-label">Step 1: Empty State</div>
+      <div class="phone-frame">
+        <div class="screen-content">
+          <div class="wizard-header">
+            <div class="back-btn">←</div>
+            <div class="wizard-title">Sair da Divida</div>
+          </div>
+
+          <div class="wizard-content">
+            <div class="step-title">Suas dividas de cartao</div>
+            <div class="step-subtitle">Adicione todos os cartoes com saldo devedor para calcularmos a melhor estrategia</div>
+
+            <button class="add-card-btn">
+              <span>➕</span>
+              <span>Adicionar Cartao</span>
+            </button>
+
+            <div style="text-align: center; padding: 40px 0;">
+              <div style="font-size: 64px; margin-bottom: 16px;">💳</div>
+              <div style="font-size: 14px; color: var(--neutral-500);">Adicione pelo menos um cartao para comecar</div>
+            </div>
+          </div>
+
+          <div class="wizard-footer">
+            <button class="btn" style="background: var(--neutral-300); color: white;">Continuar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="screen-container">
+      <div class="screen-label">Step 1: With Cards</div>
+      <div class="phone-frame">
+        <div class="screen-content">
+          <div class="wizard-header">
+            <div class="back-btn">←</div>
+            <div class="wizard-title">Sair da Divida</div>
+          </div>
+
+          <div class="wizard-content">
+            <div class="step-title">Suas dividas de cartao</div>
+            <div class="step-subtitle">Adicione todos os cartoes com saldo devedor</div>
+
+            <div class="debt-card">
+              <div class="debt-card-header">
+                <div class="debt-card-name">
+                  <div class="debt-card-icon">💳</div>
+                  <div class="debt-card-label">Cartao 1</div>
+                </div>
+                <div class="debt-card-delete">🗑️</div>
+              </div>
+              <div class="input-row">
+                <div class="input-group">
+                  <label class="input-label">Saldo devedor</label>
+                  <div class="input-currency">
+                    <span class="prefix">R$</span>
+                    <input type="text" class="input-field" value="5.200">
+                  </div>
+                </div>
+                <div class="input-group small">
+                  <label class="input-label">Taxa mensal</label>
+                  <input type="text" class="input-field" value="14%" style="text-align: center;">
+                </div>
+              </div>
+              <div class="input-group">
+                <label class="input-label">Pagamento minimo</label>
+                <div class="input-currency">
+                  <span class="prefix">R$</span>
+                  <input type="text" class="input-field" value="156">
+                </div>
+              </div>
+            </div>
+
+            <div class="debt-card">
+              <div class="debt-card-header">
+                <div class="debt-card-name">
+                  <div class="debt-card-icon" style="background: linear-gradient(135deg, #B71C1C, #E53935);">💳</div>
+                  <div class="debt-card-label">Cartao 2</div>
+                </div>
+                <div class="debt-card-delete">🗑️</div>
+              </div>
+              <div class="input-row">
+                <div class="input-group">
+                  <label class="input-label">Saldo devedor</label>
+                  <div class="input-currency">
+                    <span class="prefix">R$</span>
+                    <input type="text" class="input-field" value="3.100">
+                  </div>
+                </div>
+                <div class="input-group small">
+                  <label class="input-label">Taxa mensal</label>
+                  <input type="text" class="input-field" value="12%" style="text-align: center;">
+                </div>
+              </div>
+              <div class="input-group">
+                <label class="input-label">Pagamento minimo</label>
+                <div class="input-currency">
+                  <span class="prefix">R$</span>
+                  <input type="text" class="input-field" value="93">
+                </div>
+              </div>
+            </div>
+
+            <button class="add-card-btn">
+              <span>➕</span>
+              <span>Adicionar Outro Cartao</span>
+            </button>
+          </div>
+
+          <div class="wizard-footer">
+            <button class="btn btn-primary">Continuar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title">Step 2: Reality Check (Shock Value)</div>
+  <div class="screens-row">
+    <div class="screen-container">
+      <div class="screen-label">Step 2: Shock Reveal</div>
+      <div class="phone-frame">
+        <div class="screen-content">
+          <div class="wizard-header">
+            <div class="back-btn">←</div>
+            <div class="wizard-title">Sair da Divida</div>
+          </div>
+
+          <div class="wizard-content">
+            <div class="shock-section">
+              <div class="shock-emoji">😱</div>
+              <div class="shock-title">Pagando so o minimo...</div>
+              <div class="shock-value">94 meses</div>
+              <div class="shock-subtitle">Quase 8 ANOS para quitar suas dividas!</div>
+            </div>
+
+            <div class="debt-summary">
+              <div class="debt-summary-row">
+                <span class="label">Divida total</span>
+                <span class="value">R$ 8.300,00</span>
+              </div>
+              <div class="debt-summary-row">
+                <span class="label">Pagamento minimo total</span>
+                <span class="value">R$ 249,00/mes</span>
+              </div>
+              <div class="debt-summary-row">
+                <span class="label" style="color: var(--danger);">Juros que voce vai pagar</span>
+                <span class="value" style="color: var(--danger);">R$ 15.670,00</span>
+              </div>
+              <div class="debt-summary-row">
+                <span class="label">Total que voce vai pagar</span>
+                <span class="value" style="font-weight: 700;">R$ 23.970,00</span>
+              </div>
+            </div>
+
+            <div style="background: rgba(198, 40, 40, 0.1); border-radius: 12px; padding: 16px; text-align: center;">
+              <div style="font-size: 14px; color: var(--danger); font-weight: 600;">
+                Voce vai pagar quase 3x o valor que deve! 😰
+              </div>
+            </div>
+          </div>
+
+          <div class="wizard-footer">
+            <button class="btn btn-primary">Ver Estrategias de Quitacao</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title">Step 3: Choose Strategy</div>
+  <div class="screens-row">
+    <div class="screen-container">
+      <div class="screen-label">Step 3: Budget & Strategy</div>
+      <div class="phone-frame">
+        <div class="screen-content">
+          <div class="wizard-header">
+            <div class="back-btn">←</div>
+            <div class="wizard-title">Sair da Divida</div>
+          </div>
+
+          <div class="wizard-content">
+            <div class="step-title">Escolha sua estrategia</div>
+            <div class="step-subtitle">Quanto voce pode pagar por mes?</div>
+
+            <div class="budget-section">
+              <div class="budget-label">Orcamento mensal para dividas</div>
+              <div class="budget-hint">Minimo: R$ 249 (pagamento minimo)</div>
+              <div class="budget-value">R$ 500</div>
+              <div class="slider-track">
+                <div class="slider-fill" style="width: 35%;"></div>
+                <div class="slider-thumb" style="left: 35%;"></div>
+              </div>
+              <div class="slider-labels">
+                <span>R$ 249</span>
+                <span>R$ 1.000</span>
+              </div>
+            </div>
+
+            <div class="strategy-card selected recommended">
+              <div class="strategy-header">
+                <div class="strategy-name">🔥 Avalanche</div>
+                <div class="strategy-icon">📉</div>
+              </div>
+              <div class="strategy-desc">Pague primeiro a divida com maior taxa de juros. Economiza mais dinheiro!</div>
+              <div class="strategy-stats">
+                <div class="strategy-stat">
+                  <div class="label">Tempo</div>
+                  <div class="value positive">22 meses</div>
+                </div>
+                <div class="strategy-stat">
+                  <div class="label">Juros totais</div>
+                  <div class="value positive">R$ 3.240</div>
+                </div>
+                <div class="strategy-stat">
+                  <div class="label">Economia</div>
+                  <div class="value positive">R$ 12.430</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="strategy-card">
+              <div class="strategy-header">
+                <div class="strategy-name">⚡ Bola de Neve</div>
+                <div class="strategy-icon">🎯</div>
+              </div>
+              <div class="strategy-desc">Pague primeiro a menor divida. Ganha motivacao com vitorias rapidas!</div>
+              <div class="strategy-stats">
+                <div class="strategy-stat">
+                  <div class="label">Tempo</div>
+                  <div class="value">24 meses</div>
+                </div>
+                <div class="strategy-stat">
+                  <div class="label">Juros totais</div>
+                  <div class="value">R$ 3.580</div>
+                </div>
+                <div class="strategy-stat">
+                  <div class="label">Economia</div>
+                  <div class="value">R$ 12.090</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="strategy-card">
+              <div class="strategy-header">
+                <div class="strategy-name">🔄 Consolidacao</div>
+                <div class="strategy-icon">💰</div>
+              </div>
+              <div class="strategy-desc">Troque todas as dividas por um emprestimo com taxa menor</div>
+              <div class="strategy-stats">
+                <div class="strategy-stat">
+                  <div class="label">Tempo</div>
+                  <div class="value positive">18 meses</div>
+                </div>
+                <div class="strategy-stat">
+                  <div class="label">Juros totais</div>
+                  <div class="value positive">R$ 1.850</div>
+                </div>
+                <div class="strategy-stat">
+                  <div class="label">Economia</div>
+                  <div class="value positive">R$ 13.820</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="wizard-footer">
+            <button class="btn btn-primary">Ver Plano Detalhado</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title">Step 4: Freedom Timeline</div>
+  <div class="screens-row">
+    <div class="screen-container">
+      <div class="screen-label">Step 4: Timeline Result</div>
+      <div class="phone-frame">
+        <div class="screen-content">
+          <div class="wizard-header">
+            <div class="back-btn">←</div>
+            <div class="wizard-title">Sair da Divida</div>
+          </div>
+
+          <div class="wizard-content">
+            <div class="freedom-card">
+              <div class="freedom-emoji">🎉</div>
+              <div class="freedom-title">Livre em 22 meses!</div>
+              <div class="freedom-date">Outubro de 2026</div>
+              <div class="freedom-stats">
+                <div class="freedom-stat">
+                  <div class="label">Pagamento</div>
+                  <div class="value">R$ 500/mes</div>
+                </div>
+                <div class="freedom-stat">
+                  <div class="label">Economia</div>
+                  <div class="value">R$ 12.430</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="timeline">
+              <div class="timeline-title">Cronograma de quitacao</div>
+              <div class="timeline-bar">
+                <div class="timeline-segment" style="width: 45%; background: linear-gradient(135deg, #1A237E, #3949AB);">Cartao 1</div>
+                <div class="timeline-segment" style="width: 55%; background: linear-gradient(135deg, #B71C1C, #E53935);">Cartao 2</div>
+              </div>
+              <div class="timeline-legend">
+                <div class="timeline-legend-item">
+                  <div class="timeline-legend-dot" style="background: #3949AB;"></div>
+                  <span>Cartao 1 (10 meses)</span>
+                </div>
+                <div class="timeline-legend-item">
+                  <div class="timeline-legend-dot" style="background: #E53935;"></div>
+                  <span>Cartao 2 (+12 meses)</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="milestones">
+              <div class="milestones-title">Marcos do caminho</div>
+              <div class="milestone-item">
+                <div class="milestone-check done">✓</div>
+                <div class="milestone-content">
+                  <div class="milestone-name">Plano criado</div>
+                  <div class="milestone-date">Hoje</div>
+                </div>
+                <span>🏁</span>
+              </div>
+              <div class="milestone-item">
+                <div class="milestone-check">1</div>
+                <div class="milestone-content">
+                  <div class="milestone-name">25% quitado</div>
+                  <div class="milestone-date">Mai 2025</div>
+                </div>
+                <span>🥉</span>
+              </div>
+              <div class="milestone-item">
+                <div class="milestone-check">2</div>
+                <div class="milestone-content">
+                  <div class="milestone-name">Cartao 1 zerado!</div>
+                  <div class="milestone-date">Out 2025</div>
+                </div>
+                <span>🎉</span>
+              </div>
+              <div class="milestone-item">
+                <div class="milestone-check">3</div>
+                <div class="milestone-content">
+                  <div class="milestone-name">LIVRE DAS DIVIDAS!</div>
+                  <div class="milestone-date">Out 2026</div>
+                </div>
+                <span>👑</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="wizard-footer">
+            <button class="btn btn-primary">Comecar a Acompanhar</button>
+            <button class="btn btn-secondary">Salvar Plano</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

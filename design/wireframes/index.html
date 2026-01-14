@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SimulaCredito - Complete Wireframe Package</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #2E7D32;
+      --primary-light: #4CAF50;
+      --secondary: #FF6B35;
+      --neutral-900: #212121;
+      --neutral-700: #455A64;
+      --neutral-500: #78909C;
+      --neutral-100: #ECEFF1;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      min-height: 100vh;
+      padding: 60px 40px;
+      color: white;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 60px;
+    }
+
+    .logo {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    .title {
+      font-family: 'Nunito', sans-serif;
+      font-size: 48px;
+      font-weight: 800;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, var(--primary-light), #81C784);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      font-size: 20px;
+      opacity: 0.8;
+      margin-bottom: 32px;
+    }
+
+    .stats {
+      display: flex;
+      justify-content: center;
+      gap: 48px;
+    }
+
+    .stat {
+      text-align: center;
+    }
+
+    .stat-value {
+      font-family: 'Nunito', sans-serif;
+      font-size: 36px;
+      font-weight: 800;
+      color: var(--primary-light);
+    }
+
+    .stat-label {
+      font-size: 14px;
+      opacity: 0.7;
+    }
+
+    .wireframe-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      gap: 24px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .wireframe-card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 20px;
+      padding: 24px;
+      transition: all 0.3s;
+      text-decoration: none;
+      color: white;
+    }
+
+    .wireframe-card:hover {
+      background: rgba(255,255,255,0.1);
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .card-icon {
+      width: 56px;
+      height: 56px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+    }
+
+    .card-title {
+      font-family: 'Nunito', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .card-description {
+      font-size: 14px;
+      opacity: 0.8;
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+
+    .card-screens {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .screen-tag {
+      background: rgba(255,255,255,0.1);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .card-arrow {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      color: var(--primary-light);
+      font-weight: 600;
+      margin-top: 16px;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 60px;
+      padding-top: 40px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .footer-title {
+      font-family: 'Nunito', sans-serif;
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    .footer-text {
+      font-size: 14px;
+      opacity: 0.7;
+      max-width: 600px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    .tech-stack {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      margin-top: 24px;
+    }
+
+    .tech-item {
+      background: rgba(255,255,255,0.05);
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">💰</div>
+    <h1 class="title">SimulaCredito</h1>
+    <p class="subtitle">Complete Wireframe Package - Design Reference</p>
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-value">35+</div>
+        <div class="stat-label">Screens</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">8</div>
+        <div class="stat-label">User Flows</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">3</div>
+        <div class="stat-label">Core Stories</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="wireframe-grid">
+    <a href="01-design-system.html" class="wireframe-card">
+      <div class="card-header">
+        <div class="card-icon">🎨</div>
+        <div class="card-title">Design System</div>
+      </div>
+      <p class="card-description">
+        Core visual components: colors, typography, buttons, inputs, cards, progress indicators, and gamification elements.
+      </p>
+      <div class="card-screens">
+        <span class="screen-tag">Colors</span>
+        <span class="screen-tag">Typography</span>
+        <span class="screen-tag">Buttons</span>
+        <span class="screen-tag">Inputs</span>
+        <span class="screen-tag">Cards</span>
+        <span class="screen-tag">Gamification</span>
+      </div>
+      <div class="card-arrow">View components →</div>
+    </a>
+
+    <a href="02-onboarding.html" class="wireframe-card">
+      <div class="card-header">
+        <div class="card-icon">👋</div>
+        <div class="card-title">Onboarding Flow</div>
+      </div>
+      <p class="card-description">
+        Welcome carousel, profile setup wizard, and interactive first simulation tutorial with guided tooltips.
+      </p>
+      <div class="card-screens">
+        <span class="screen-tag">Welcome (3 slides)</span>
+        <span class="screen-tag">Profile Setup</span>
+        <span class="screen-tag">Tutorial</span>
+        <span class="screen-tag">Completion</span>
+      </div>
+      <div class="card-arrow">View screens →</div>
+    </a>
+
+    <a href="03-dashboard.html" class="wireframe-card">
+      <div class="card-header">
+        <div class="card-icon">🏠</div>
+        <div class="card-title">Dashboard & Navigation</div>
+      </div>
+      <p class="card-description">
+        Home dashboard with health score, quick actions, recent simulations, and simulation type selector.
+      </p>
+      <div class="card-screens">
+        <span class="screen-tag">Dashboard (Active)</span>
+        <span class="screen-tag">Dashboard (Empty)</span>
+        <span class="screen-tag">Type Selector</span>
+      </div>
+      <div class="card-arrow">View screens →</div>
+    </a>
+
+    <a href="04-refinancing-wizard.html" class="wireframe-card">
+      <div class="card-header">
+        <div class="card-icon">🔄</div>
+        <div class="card-title">Refinancing Discovery</div>
+      </div>
+      <p class="card-description">
+        Help users discover hidden loan costs and calculate savings from refinancing. Includes shock value reveal.
+      </p>
+      <div class="card-screens">
+        <span class="screen-tag">Current Loan Input</span>
+        <span class="screen-tag">Rate Awareness</span>
+        <span class="screen-tag">True Cost Reveal</span>
+        <span class="screen-tag">Savings Comparison</span>
+        <span class="screen-tag">Validation States</span>
+      </div>
+      <div class="card-arrow">View screens →</div>
+    </a>
+
+    <a href="05-debt-escape-wizard.html" class="wireframe-card">
+      <div class="card-header">
+        <div class="card-icon">💳</div>
+        <div class="card-title">Debt Escape Planning</div>
+      </div>
+      <p class="card-description">
+        Credit card debt payoff strategies: Snowball, Avalanche, and Consolidation comparison with freedom timeline.
+      </p>
+      <div class="card-screens">
+        <span class="screen-tag">Add Cards</span>
+        <span class="screen-tag">Reality Check</span>
+        <span class="screen-tag">Strategy Selection</span>
+        <span class="screen-tag">Freedom Timeline</span>
+        <span class="screen-tag">Milestones</span>
+      </div>
+      <div class="card-arrow">View screens →</div>
+    </a>
+
+    <a href="06-purchase-wizard.html" class="wireframe-card">
+      <div class="card-header">
+        <div class="card-icon">🚗</div>
+        <div class="card-title">Asset Purchase Planning</div>
+      </div>
+      <p class="card-description">
+        Calculate true cost of financing a purchase. Profile-based rate estimation and term comparison.
+      </p>
+      <div class="card-screens">
+        <span class="screen-tag">Asset Selection</span>
+        <span class="screen-tag">Rate Estimation</span>
+        <span class="screen-tag">Term Comparison</span>
+        <span class="screen-tag">PRICE vs SAC</span>
+      </div>
+      <div class="card-arrow">View screens →</div>
+    </a>
+
+    <a href="07-results-and-tracker.html" class="wireframe-card">
+      <div class="card-header">
+        <div class="card-icon">📊</div>
+        <div class="card-title">Results & Debt Tracker</div>
+      </div>
+      <p class="card-description">
+        Loan results summary, full payment schedule, and debt tracking with milestone celebrations.
+      </p>
+      <div class="card-screens">
+        <span class="screen-tag">Results Summary</span>
+        <span class="screen-tag">Full Schedule</span>
+        <span class="screen-tag">Tracker (Empty)</span>
+        <span class="screen-tag">Tracker (Active)</span>
+        <span class="screen-tag">Milestone Toast</span>
+      </div>
+      <div class="card-arrow">View screens →</div>
+    </a>
+
+    <a href="08-profile-settings.html" class="wireframe-card">
+      <div class="card-header">
+        <div class="card-icon">👤</div>
+        <div class="card-title">Profile & Settings</div>
+      </div>
+      <p class="card-description">
+        User profile management, achievements gallery, financial data editing, and app settings.
+      </p>
+      <div class="card-screens">
+        <span class="screen-tag">Profile Main</span>
+        <span class="screen-tag">Achievements</span>
+        <span class="screen-tag">Financial Data</span>
+        <span class="screen-tag">Settings</span>
+      </div>
+      <div class="card-arrow">View screens →</div>
+    </a>
+  </div>
+
+  <div class="footer">
+    <h2 class="footer-title">Ready for Implementation</h2>
+    <p class="footer-text">
+      These wireframes serve as the visual reference for building the SimulaCredito React Native app.
+      All screens include states for empty, loading, validation errors, and success scenarios.
+    </p>
+    <div class="tech-stack">
+      <span class="tech-item">React Native</span>
+      <span class="tech-item">Expo</span>
+      <span class="tech-item">Hasban API</span>
+      <span class="tech-item">AsyncStorage</span>
+    </div>
+  </div>
+</body>
+</html>

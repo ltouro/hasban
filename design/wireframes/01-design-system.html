@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=375, initial-scale=1">
+  <title>SimulaCredito - Design System</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Inter:wght@400;500;600&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #2E7D32;
+      --primary-light: #4CAF50;
+      --primary-dark: #1B5E20;
+      --secondary: #FF6B35;
+      --secondary-light: #FF8A5B;
+      --danger: #C62828;
+      --danger-light: #EF5350;
+      --warning: #F9A825;
+      --neutral-900: #212121;
+      --neutral-700: #455A64;
+      --neutral-500: #78909C;
+      --neutral-300: #B0BEC5;
+      --neutral-100: #ECEFF1;
+      --background: #FAFAFA;
+      --card: #FFFFFF;
+      --shadow: 0 2px 8px rgba(0,0,0,0.08);
+      --shadow-lg: 0 4px 16px rgba(0,0,0,0.12);
+      --radius: 12px;
+      --radius-lg: 20px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f0f0f0;
+      padding: 40px;
+      color: var(--neutral-900);
+    }
+
+    .design-section {
+      background: white;
+      border-radius: 16px;
+      padding: 32px;
+      margin-bottom: 32px;
+      box-shadow: var(--shadow);
+    }
+
+    .design-section h2 {
+      font-family: 'Nunito', sans-serif;
+      font-size: 24px;
+      font-weight: 800;
+      margin-bottom: 24px;
+      color: var(--neutral-900);
+      border-bottom: 2px solid var(--neutral-100);
+      padding-bottom: 12px;
+    }
+
+    .color-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 16px;
+    }
+
+    .color-swatch {
+      height: 80px;
+      border-radius: 12px;
+      display: flex;
+      align-items: flex-end;
+      padding: 8px 12px;
+      color: white;
+      font-size: 12px;
+      font-weight: 600;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    }
+
+    .typography-sample {
+      margin-bottom: 16px;
+    }
+
+    .typography-sample .label {
+      font-size: 12px;
+      color: var(--neutral-500);
+      margin-bottom: 4px;
+    }
+
+    .display-xl { font-family: 'Nunito', sans-serif; font-size: 32px; font-weight: 800; }
+    .display-lg { font-family: 'Nunito', sans-serif; font-size: 24px; font-weight: 700; }
+    .display-md { font-family: 'Nunito', sans-serif; font-size: 20px; font-weight: 700; }
+    .body-lg { font-family: 'Inter', sans-serif; font-size: 16px; }
+    .body-md { font-family: 'Inter', sans-serif; font-size: 14px; }
+    .body-sm { font-family: 'Inter', sans-serif; font-size: 12px; color: var(--neutral-500); }
+    .money { font-family: 'Roboto Mono', monospace; font-size: 28px; font-weight: 500; }
+
+    .component-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 24px;
+    }
+
+    .component-card {
+      background: var(--background);
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .component-card h4 {
+      font-size: 12px;
+      text-transform: uppercase;
+      color: var(--neutral-500);
+      margin-bottom: 12px;
+      letter-spacing: 0.5px;
+    }
+
+    /* Button Components */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 14px 24px;
+      border-radius: 12px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+    }
+
+    .btn-secondary {
+      background: var(--secondary);
+      color: white;
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 2px solid var(--primary);
+      color: var(--primary);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--primary);
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      color: white;
+    }
+
+    .btn-block {
+      width: 100%;
+    }
+
+    .btn-sm {
+      padding: 10px 16px;
+      font-size: 14px;
+    }
+
+    .btn-lg {
+      padding: 18px 32px;
+      font-size: 18px;
+    }
+
+    /* Input Components */
+    .input-group {
+      margin-bottom: 16px;
+    }
+
+    .input-label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--neutral-700);
+      margin-bottom: 6px;
+    }
+
+    .input-field {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid var(--neutral-300);
+      border-radius: 12px;
+      font-size: 16px;
+      font-family: 'Inter', sans-serif;
+      transition: all 0.2s;
+    }
+
+    .input-field:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.1);
+    }
+
+    .input-field.error {
+      border-color: var(--danger);
+    }
+
+    .input-field.success {
+      border-color: var(--primary);
+    }
+
+    .input-currency {
+      position: relative;
+    }
+
+    .input-currency .prefix {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-family: 'Roboto Mono', monospace;
+      font-weight: 500;
+      color: var(--neutral-500);
+    }
+
+    .input-currency input {
+      padding-left: 48px;
+      font-family: 'Roboto Mono', monospace;
+    }
+
+    .input-hint {
+      font-size: 12px;
+      color: var(--neutral-500);
+      margin-top: 4px;
+    }
+
+    .input-error {
+      font-size: 12px;
+      color: var(--danger);
+      margin-top: 4px;
+    }
+
+    /* Card Components */
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow);
+    }
+
+    .card-elevated {
+      box-shadow: var(--shadow-lg);
+    }
+
+    .card-interactive {
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .card-interactive:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    /* Selection Cards */
+    .selection-card {
+      background: var(--card);
+      border: 2px solid var(--neutral-100);
+      border-radius: 16px;
+      padding: 20px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+
+    .selection-card:hover {
+      border-color: var(--neutral-300);
+    }
+
+    .selection-card.selected {
+      border-color: var(--primary);
+      background: rgba(46, 125, 50, 0.05);
+    }
+
+    .selection-card .icon {
+      width: 48px;
+      height: 48px;
+      background: var(--neutral-100);
+      border-radius: 12px;
+      margin: 0 auto 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+
+    .selection-card.selected .icon {
+      background: var(--primary);
+      color: white;
+    }
+
+    /* Chips/Tags */
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .chip-success {
+      background: rgba(46, 125, 50, 0.1);
+      color: var(--primary);
+    }
+
+    .chip-warning {
+      background: rgba(249, 168, 37, 0.1);
+      color: var(--warning);
+    }
+
+    .chip-danger {
+      background: rgba(198, 40, 40, 0.1);
+      color: var(--danger);
+    }
+
+    /* Progress Bar */
+    .progress-bar {
+      height: 8px;
+      background: var(--neutral-100);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--primary-light));
+      border-radius: 4px;
+      transition: width 0.5s ease;
+    }
+
+    /* Money Display */
+    .money-display {
+      font-family: 'Roboto Mono', monospace;
+    }
+
+    .money-display.positive {
+      color: var(--primary);
+    }
+
+    .money-display.negative {
+      color: var(--danger);
+    }
+
+    .money-display .currency {
+      font-size: 0.6em;
+      opacity: 0.7;
+    }
+
+    /* Shock Value Display */
+    .shock-value {
+      text-align: center;
+      padding: 24px;
+      background: linear-gradient(135deg, rgba(198, 40, 40, 0.05), rgba(198, 40, 40, 0.1));
+      border-radius: 16px;
+      border: 2px solid var(--danger-light);
+    }
+
+    .shock-value .label {
+      font-size: 14px;
+      color: var(--neutral-700);
+      margin-bottom: 8px;
+    }
+
+    .shock-value .value {
+      font-family: 'Roboto Mono', monospace;
+      font-size: 36px;
+      font-weight: 700;
+      color: var(--danger);
+    }
+
+    .shock-value .subtitle {
+      font-size: 12px;
+      color: var(--danger);
+      margin-top: 8px;
+    }
+
+    /* Savings Display */
+    .savings-display {
+      text-align: center;
+      padding: 24px;
+      background: linear-gradient(135deg, rgba(46, 125, 50, 0.05), rgba(46, 125, 50, 0.1));
+      border-radius: 16px;
+      border: 2px solid var(--primary-light);
+    }
+
+    .savings-display .label {
+      font-size: 14px;
+      color: var(--neutral-700);
+      margin-bottom: 8px;
+    }
+
+    .savings-display .value {
+      font-family: 'Roboto Mono', monospace;
+      font-size: 36px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .savings-display .subtitle {
+      font-size: 12px;
+      color: var(--primary);
+      margin-top: 8px;
+    }
+
+    /* Achievement Badge */
+    .achievement {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px;
+      background: linear-gradient(135deg, #FFF8E1, #FFECB3);
+      border-radius: 12px;
+      border: 2px solid #FFD54F;
+    }
+
+    .achievement .badge {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, #FFD54F, #FFC107);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+
+    .achievement .content h4 {
+      font-family: 'Nunito', sans-serif;
+      font-weight: 700;
+      color: var(--neutral-900);
+    }
+
+    .achievement .content p {
+      font-size: 12px;
+      color: var(--neutral-700);
+    }
+
+    /* Tab Bar */
+    .tab-bar {
+      display: flex;
+      background: var(--card);
+      padding: 8px;
+      border-radius: 16px;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .tab-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 8px;
+      border-radius: 12px;
+      color: var(--neutral-500);
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .tab-item .icon {
+      font-size: 24px;
+      margin-bottom: 4px;
+    }
+
+    .tab-item.active {
+      color: var(--primary);
+      background: rgba(46, 125, 50, 0.1);
+    }
+
+    /* Wizard Progress */
+    .wizard-progress {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 16px;
+    }
+
+    .wizard-step {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+      background: var(--neutral-100);
+      color: var(--neutral-500);
+    }
+
+    .wizard-step.active {
+      background: var(--primary);
+      color: white;
+    }
+
+    .wizard-step.completed {
+      background: var(--primary);
+      color: white;
+    }
+
+    .wizard-line {
+      width: 40px;
+      height: 2px;
+      background: var(--neutral-100);
+    }
+
+    .wizard-line.completed {
+      background: var(--primary);
+    }
+
+    /* Slider */
+    .slider-container {
+      padding: 8px 0;
+    }
+
+    .slider-track {
+      height: 8px;
+      background: var(--neutral-100);
+      border-radius: 4px;
+      position: relative;
+    }
+
+    .slider-fill {
+      height: 100%;
+      background: var(--primary);
+      border-radius: 4px;
+      width: 40%;
+    }
+
+    .slider-thumb {
+      width: 24px;
+      height: 24px;
+      background: var(--primary);
+      border-radius: 50%;
+      position: absolute;
+      top: 50%;
+      left: 40%;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 2px 8px rgba(46, 125, 50, 0.3);
+    }
+
+    .slider-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--neutral-500);
+    }
+
+    .slider-value {
+      text-align: center;
+      font-family: 'Roboto Mono', monospace;
+      font-size: 24px;
+      font-weight: 500;
+      color: var(--neutral-900);
+      margin-bottom: 8px;
+    }
+
+    .flex-row { display: flex; gap: 12px; }
+    .flex-col { display: flex; flex-direction: column; gap: 12px; }
+    .mb-8 { margin-bottom: 8px; }
+    .mb-16 { margin-bottom: 16px; }
+    .mb-24 { margin-bottom: 24px; }
+  </style>
+</head>
+<body>
+  <h1 style="font-family: 'Nunito', sans-serif; font-size: 36px; font-weight: 800; margin-bottom: 32px; color: var(--primary);">
+    SimulaCredito Design System
+  </h1>
+
+  <!-- Colors -->
+  <div class="design-section">
+    <h2>Color Palette</h2>
+    <div class="color-grid">
+      <div class="color-swatch" style="background: var(--primary);">Primary<br>#2E7D32</div>
+      <div class="color-swatch" style="background: var(--primary-light);">Primary Light<br>#4CAF50</div>
+      <div class="color-swatch" style="background: var(--primary-dark);">Primary Dark<br>#1B5E20</div>
+      <div class="color-swatch" style="background: var(--secondary);">Secondary<br>#FF6B35</div>
+      <div class="color-swatch" style="background: var(--secondary-light);">Secondary Light<br>#FF8A5B</div>
+      <div class="color-swatch" style="background: var(--danger);">Danger<br>#C62828</div>
+      <div class="color-swatch" style="background: var(--warning);">Warning<br>#F9A825</div>
+      <div class="color-swatch" style="background: var(--neutral-900);">Neutral 900<br>#212121</div>
+      <div class="color-swatch" style="background: var(--neutral-700);">Neutral 700<br>#455A64</div>
+      <div class="color-swatch" style="background: var(--neutral-500);">Neutral 500<br>#78909C</div>
+      <div class="color-swatch" style="background: var(--neutral-300); color: var(--neutral-700);">Neutral 300<br>#B0BEC5</div>
+      <div class="color-swatch" style="background: var(--neutral-100); color: var(--neutral-700);">Neutral 100<br>#ECEFF1</div>
+    </div>
+  </div>
+
+  <!-- Typography -->
+  <div class="design-section">
+    <h2>Typography</h2>
+    <div class="typography-sample">
+      <div class="label">Display XL - Nunito 800</div>
+      <div class="display-xl">R$ 12.450,00</div>
+    </div>
+    <div class="typography-sample">
+      <div class="label">Display LG - Nunito 700</div>
+      <div class="display-lg">Simular Emprestimo</div>
+    </div>
+    <div class="typography-sample">
+      <div class="label">Display MD - Nunito 700</div>
+      <div class="display-md">Quanto voce quer?</div>
+    </div>
+    <div class="typography-sample">
+      <div class="label">Body LG - Inter 400</div>
+      <div class="body-lg">Descubra quanto voce pode economizar refinanciando seu emprestimo atual.</div>
+    </div>
+    <div class="typography-sample">
+      <div class="label">Body MD - Inter 400</div>
+      <div class="body-md">Parcela mensal estimada com base no seu perfil financeiro.</div>
+    </div>
+    <div class="typography-sample">
+      <div class="label">Body SM - Inter 400</div>
+      <div class="body-sm">Taxa sujeita a analise de credito. CET: 2,5% a.m.</div>
+    </div>
+    <div class="typography-sample">
+      <div class="label">Money - Roboto Mono 500</div>
+      <div class="money">R$ 1.234,56</div>
+    </div>
+  </div>
+
+  <!-- Buttons -->
+  <div class="design-section">
+    <h2>Buttons</h2>
+    <div class="component-grid">
+      <div class="component-card">
+        <h4>Primary Actions</h4>
+        <div class="flex-col">
+          <button class="btn btn-primary btn-block btn-lg">Continuar</button>
+          <button class="btn btn-primary btn-block">Simular Agora</button>
+          <button class="btn btn-primary btn-sm">Salvar</button>
+        </div>
+      </div>
+      <div class="component-card">
+        <h4>Secondary Actions</h4>
+        <div class="flex-col">
+          <button class="btn btn-secondary btn-block">Ver Detalhes</button>
+          <button class="btn btn-outline btn-block">Comparar</button>
+          <button class="btn btn-ghost">Pular</button>
+        </div>
+      </div>
+      <div class="component-card">
+        <h4>Danger Actions</h4>
+        <div class="flex-col">
+          <button class="btn btn-danger btn-block">Excluir Divida</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Inputs -->
+  <div class="design-section">
+    <h2>Input Fields</h2>
+    <div class="component-grid">
+      <div class="component-card">
+        <h4>Default Input</h4>
+        <div class="input-group">
+          <label class="input-label">Nome completo</label>
+          <input type="text" class="input-field" placeholder="Digite seu nome">
+          <div class="input-hint">Usado apenas para personalizar sua experiencia</div>
+        </div>
+      </div>
+      <div class="component-card">
+        <h4>Currency Input</h4>
+        <div class="input-group">
+          <label class="input-label">Valor do emprestimo</label>
+          <div class="input-currency">
+            <span class="prefix">R$</span>
+            <input type="text" class="input-field" value="10.000,00">
+          </div>
+        </div>
+      </div>
+      <div class="component-card">
+        <h4>Error State</h4>
+        <div class="input-group">
+          <label class="input-label">Taxa de juros</label>
+          <input type="text" class="input-field error" value="-5%">
+          <div class="input-error">Taxa deve ser maior que zero</div>
+        </div>
+      </div>
+      <div class="component-card">
+        <h4>Success State</h4>
+        <div class="input-group">
+          <label class="input-label">Prazo em meses</label>
+          <input type="text" class="input-field success" value="24">
+          <div class="input-hint" style="color: var(--primary);">Prazo valido</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Slider -->
+  <div class="design-section">
+    <h2>Slider Input</h2>
+    <div class="component-grid">
+      <div class="component-card">
+        <h4>Income Slider</h4>
+        <div class="input-label">Renda mensal</div>
+        <div class="slider-value">R$ 5.000</div>
+        <div class="slider-container">
+          <div class="slider-track">
+            <div class="slider-fill"></div>
+            <div class="slider-thumb"></div>
+          </div>
+          <div class="slider-labels">
+            <span>R$ 0</span>
+            <span>R$ 50.000+</span>
+          </div>
+        </div>
+      </div>
+      <div class="component-card">
+        <h4>Term Slider</h4>
+        <div class="input-label">Prazo</div>
+        <div class="slider-value">24 meses</div>
+        <div class="slider-container">
+          <div class="slider-track">
+            <div class="slider-fill" style="width: 30%;"></div>
+            <div class="slider-thumb" style="left: 30%;"></div>
+          </div>
+          <div class="slider-labels">
+            <span>6 meses</span>
+            <span>60 meses</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Selection Cards -->
+  <div class="design-section">
+    <h2>Selection Cards</h2>
+    <div class="component-grid">
+      <div class="component-card">
+        <h4>Employment Status</h4>
+        <div class="flex-row">
+          <div class="selection-card selected" style="flex: 1;">
+            <div class="icon">💼</div>
+            <div style="font-weight: 600;">Empregado</div>
+          </div>
+          <div class="selection-card" style="flex: 1;">
+            <div class="icon">🏢</div>
+            <div style="font-weight: 600;">Autonomo</div>
+          </div>
+        </div>
+      </div>
+      <div class="component-card">
+        <h4>Amortization Type</h4>
+        <div class="flex-row">
+          <div class="selection-card selected" style="flex: 1;">
+            <div class="icon">📊</div>
+            <div style="font-weight: 600;">PRICE</div>
+            <div style="font-size: 11px; color: var(--neutral-500); margin-top: 4px;">Parcela fixa</div>
+          </div>
+          <div class="selection-card" style="flex: 1;">
+            <div class="icon">📉</div>
+            <div style="font-weight: 600;">SAC</div>
+            <div style="font-size: 11px; color: var(--neutral-500); margin-top: 4px;">Parcela decrescente</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Value Displays -->
+  <div class="design-section">
+    <h2>Value Displays</h2>
+    <div class="component-grid">
+      <div class="component-card">
+        <h4>Shock Value (Negative)</h4>
+        <div class="shock-value">
+          <div class="label">Voce vai pagar de juros</div>
+          <div class="value">R$ 4.567,89</div>
+          <div class="subtitle">38% a mais do que o emprestimo!</div>
+        </div>
+      </div>
+      <div class="component-card">
+        <h4>Savings Display (Positive)</h4>
+        <div class="savings-display">
+          <div class="label">Voce pode economizar</div>
+          <div class="value">R$ 2.340,00</div>
+          <div class="subtitle">Refinanciando seu emprestimo</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chips & Progress -->
+  <div class="design-section">
+    <h2>Chips & Progress</h2>
+    <div class="component-grid">
+      <div class="component-card">
+        <h4>Status Chips</h4>
+        <div class="flex-row">
+          <span class="chip chip-success">Economize 25%</span>
+          <span class="chip chip-warning">Taxa alta</span>
+          <span class="chip chip-danger">Alerta!</span>
+        </div>
+      </div>
+      <div class="component-card">
+        <h4>Progress Bar</h4>
+        <div style="font-size: 14px; margin-bottom: 8px;">Progresso do pagamento</div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: 65%;"></div>
+        </div>
+        <div style="font-size: 12px; color: var(--neutral-500); margin-top: 4px;">R$ 6.500 de R$ 10.000 pagos</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Achievement -->
+  <div class="design-section">
+    <h2>Gamification</h2>
+    <div class="component-grid">
+      <div class="component-card">
+        <h4>Achievement Unlocked</h4>
+        <div class="achievement">
+          <div class="badge">🏆</div>
+          <div class="content">
+            <h4>Metade do Caminho!</h4>
+            <p>Voce pagou 50% da sua divida. Continue assim!</p>
+          </div>
+        </div>
+      </div>
+      <div class="component-card">
+        <h4>Wizard Progress</h4>
+        <div class="wizard-progress">
+          <div class="wizard-step completed">✓</div>
+          <div class="wizard-line completed"></div>
+          <div class="wizard-step active">2</div>
+          <div class="wizard-line"></div>
+          <div class="wizard-step">3</div>
+          <div class="wizard-line"></div>
+          <div class="wizard-step">4</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab Bar -->
+  <div class="design-section">
+    <h2>Navigation</h2>
+    <div class="component-card" style="max-width: 400px;">
+      <h4>Bottom Tab Bar</h4>
+      <div class="tab-bar">
+        <div class="tab-item active">
+          <div class="icon">🏠</div>
+          <span>Inicio</span>
+        </div>
+        <div class="tab-item">
+          <div class="icon">📊</div>
+          <span>Simular</span>
+        </div>
+        <div class="tab-item">
+          <div class="icon">💳</div>
+          <span>Dividas</span>
+        </div>
+        <div class="tab-item">
+          <div class="icon">📚</div>
+          <span>Aprender</span>
+        </div>
+        <div class="tab-item">
+          <div class="icon">👤</div>
+          <span>Perfil</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=375, initial-scale=1">
+  <title>SimulaCredito - Dashboard & Navigation</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Inter:wght@400;500;600&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #2E7D32;
+      --primary-light: #4CAF50;
+      --secondary: #FF6B35;
+      --danger: #C62828;
+      --warning: #F9A825;
+      --neutral-900: #212121;
+      --neutral-700: #455A64;
+      --neutral-500: #78909C;
+      --neutral-300: #B0BEC5;
+      --neutral-100: #ECEFF1;
+      --background: #FAFAFA;
+      --card: #FFFFFF;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #1a1a2e;
+      padding: 40px;
+      color: var(--neutral-900);
+    }
+
+    h1, .section-title {
+      font-family: 'Nunito', sans-serif;
+      font-size: 28px;
+      font-weight: 800;
+      color: white;
+      margin-bottom: 32px;
+    }
+
+    .section-title { margin-top: 48px; }
+
+    .screens-row {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+
+    .screen-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .screen-label {
+      color: white;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      text-align: center;
+    }
+
+    .phone-frame {
+      width: 375px;
+      height: 812px;
+      background: var(--background);
+      border-radius: 40px;
+      overflow: hidden;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+      position: relative;
+    }
+
+    .status-bar {
+      height: 44px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 24px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .screen-content {
+      height: calc(100% - 44px - 80px);
+      overflow-y: auto;
+    }
+
+    /* Tab Bar */
+    .tab-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 80px;
+      background: white;
+      display: flex;
+      padding: 8px 16px 24px;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+    }
+
+    .tab-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--neutral-500);
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    .tab-item .icon {
+      font-size: 24px;
+      margin-bottom: 4px;
+    }
+
+    .tab-item.active {
+      color: var(--primary);
+    }
+
+    /* Dashboard Styles */
+    .dashboard-header {
+      background: linear-gradient(135deg, var(--primary), #1B5E20);
+      color: white;
+      padding: 20px 24px 60px;
+      border-radius: 0 0 32px 32px;
+    }
+
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .greeting {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    .user-name {
+      font-family: 'Nunito', sans-serif;
+      font-size: 24px;
+      font-weight: 800;
+    }
+
+    .avatar {
+      width: 48px;
+      height: 48px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+
+    .health-score-card {
+      background: rgba(255,255,255,0.15);
+      border-radius: 16px;
+      padding: 20px;
+    }
+
+    .health-score-label {
+      font-size: 12px;
+      opacity: 0.9;
+      margin-bottom: 8px;
+    }
+
+    .health-score-value {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .health-score-number {
+      font-family: 'Nunito', sans-serif;
+      font-size: 48px;
+      font-weight: 800;
+    }
+
+    .health-score-max {
+      font-size: 16px;
+      opacity: 0.7;
+    }
+
+    .health-score-bar {
+      height: 8px;
+      background: rgba(255,255,255,0.3);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .health-score-fill {
+      height: 100%;
+      background: white;
+      border-radius: 4px;
+      width: 72%;
+    }
+
+    .health-score-hint {
+      font-size: 12px;
+      opacity: 0.8;
+      margin-top: 8px;
+    }
+
+    /* Quick Actions */
+    .quick-actions {
+      padding: 24px;
+      margin-top: -40px;
+    }
+
+    .quick-actions-title {
+      font-family: 'Nunito', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      color: var(--neutral-900);
+    }
+
+    .quick-actions-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .quick-action-card {
+      background: white;
+      border-radius: 16px;
+      padding: 16px 12px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    .quick-action-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 8px;
+      font-size: 24px;
+    }
+
+    .quick-action-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--neutral-700);
+    }
+
+    /* Recent Simulations */
+    .section {
+      padding: 0 24px 24px;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .section-header h3 {
+      font-family: 'Nunito', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .section-header a {
+      font-size: 14px;
+      color: var(--primary);
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    .simulation-card {
+      background: white;
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      margin-bottom: 12px;
+    }
+
+    .simulation-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+
+    .simulation-type {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .simulation-type-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--neutral-100);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    .simulation-type-label {
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .simulation-date {
+      font-size: 12px;
+      color: var(--neutral-500);
+    }
+
+    .simulation-chip {
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    .chip-savings {
+      background: rgba(46, 125, 50, 0.1);
+      color: var(--primary);
+    }
+
+    .simulation-details {
+      display: flex;
+      gap: 24px;
+    }
+
+    .simulation-detail {
+      flex: 1;
+    }
+
+    .simulation-detail-label {
+      font-size: 11px;
+      color: var(--neutral-500);
+      margin-bottom: 2px;
+    }
+
+    .simulation-detail-value {
+      font-family: 'Roboto Mono', monospace;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    /* Tips Section */
+    .tip-card {
+      background: linear-gradient(135deg, #FFF8E1, #FFECB3);
+      border-radius: 16px;
+      padding: 16px;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+
+    .tip-icon {
+      font-size: 24px;
+    }
+
+    .tip-content h4 {
+      font-family: 'Nunito', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .tip-content p {
+      font-size: 12px;
+      color: var(--neutral-700);
+      line-height: 1.4;
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 40px 24px;
+    }
+
+    .empty-state-icon {
+      font-size: 64px;
+      margin-bottom: 16px;
+    }
+
+    .empty-state-title {
+      font-family: 'Nunito', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .empty-state-text {
+      font-size: 14px;
+      color: var(--neutral-500);
+      margin-bottom: 24px;
+    }
+
+    .btn {
+      padding: 14px 24px;
+      border-radius: 12px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    /* Simulate Tab */
+    .simulate-header {
+      padding: 20px 24px;
+    }
+
+    .simulate-title {
+      font-family: 'Nunito', sans-serif;
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--neutral-900);
+      margin-bottom: 8px;
+    }
+
+    .simulate-subtitle {
+      font-size: 14px;
+      color: var(--neutral-500);
+    }
+
+    .simulate-grid {
+      padding: 0 24px;
+    }
+
+    .simulate-card {
+      background: white;
+      border-radius: 20px;
+      padding: 24px;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+
+    .simulate-card-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      flex-shrink: 0;
+    }
+
+    .simulate-card-content {
+      flex: 1;
+    }
+
+    .simulate-card-title {
+      font-family: 'Nunito', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .simulate-card-desc {
+      font-size: 13px;
+      color: var(--neutral-500);
+      line-height: 1.4;
+      margin-bottom: 12px;
+    }
+
+    .simulate-card-action {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Dashboard & Main Tabs</h1>
+
+  <div class="section-title">Home Dashboard</div>
+  <div class="screens-row">
+    <!-- Dashboard: Normal State -->
+    <div class="screen-container">
+      <div class="screen-label">Dashboard: Active User</div>
+      <div class="phone-frame">
+        <div class="status-bar"></div>
+        <div class="screen-content">
+          <div class="dashboard-header">
+            <div class="header-top">
+              <div>
+                <div class="greeting">Boa tarde,</div>
+                <div class="user-name">Maria!</div>
+              </div>
+              <div class="avatar">👩</div>
+            </div>
+            <div class="health-score-card">
+              <div class="health-score-label">Sua saude financeira</div>
+              <div class="health-score-value">
+                <span class="health-score-number">72</span>
+                <span class="health-score-max">/ 100</span>
+              </div>
+              <div class="health-score-bar">
+                <div class="health-score-fill"></div>
+              </div>
+              <div class="health-score-hint">📈 Melhorou 5 pontos este mes!</div>
+            </div>
+          </div>
+
+          <div class="quick-actions">
+            <div class="quick-actions-title">Acoes rapidas</div>
+            <div class="quick-actions-grid">
+              <div class="quick-action-card">
+                <div class="quick-action-icon" style="background: rgba(46,125,50,0.1);">🔄</div>
+                <div class="quick-action-label">Refinanciar</div>
+              </div>
+              <div class="quick-action-card">
+                <div class="quick-action-icon" style="background: rgba(198,40,40,0.1);">💳</div>
+                <div class="quick-action-label">Sair da divida</div>
+              </div>
+              <div class="quick-action-card">
+                <div class="quick-action-icon" style="background: rgba(255,107,53,0.1);">🚗</div>
+                <div class="quick-action-label">Comprar</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-header">
+              <h3>Simulacoes recentes</h3>
+              <a href="#">Ver todas</a>
+            </div>
+
+            <div class="simulation-card">
+              <div class="simulation-card-header">
+                <div class="simulation-type">
+                  <div class="simulation-type-icon">🔄</div>
+                  <div>
+                    <div class="simulation-type-label">Refinanciamento</div>
+                    <div class="simulation-date">Hoje, 14:30</div>
+                  </div>
+                </div>
+                <div class="simulation-chip chip-savings">Economize R$2.340</div>
+              </div>
+              <div class="simulation-details">
+                <div class="simulation-detail">
+                  <div class="simulation-detail-label">Valor</div>
+                  <div class="simulation-detail-value">R$ 15.000</div>
+                </div>
+                <div class="simulation-detail">
+                  <div class="simulation-detail-label">Parcela</div>
+                  <div class="simulation-detail-value">R$ 680</div>
+                </div>
+                <div class="simulation-detail">
+                  <div class="simulation-detail-label">Prazo</div>
+                  <div class="simulation-detail-value">24 meses</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="simulation-card">
+              <div class="simulation-card-header">
+                <div class="simulation-type">
+                  <div class="simulation-type-icon">💳</div>
+                  <div>
+                    <div class="simulation-type-label">Plano de Quitacao</div>
+                    <div class="simulation-date">Ontem</div>
+                  </div>
+                </div>
+              </div>
+              <div class="simulation-details">
+                <div class="simulation-detail">
+                  <div class="simulation-detail-label">Divida total</div>
+                  <div class="simulation-detail-value">R$ 8.500</div>
+                </div>
+                <div class="simulation-detail">
+                  <div class="simulation-detail-label">Meta</div>
+                  <div class="simulation-detail-value">18 meses</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-header">
+              <h3>Dica do dia</h3>
+            </div>
+            <div class="tip-card">
+              <div class="tip-icon">💡</div>
+              <div class="tip-content">
+                <h4>Pague mais que o minimo!</h4>
+                <p>Pagar apenas o minimo do cartao pode fazer voce demorar ate 10 anos para quitar a divida.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-bar">
+          <div class="tab-item active">
+            <div class="icon">🏠</div>
+            <span>Inicio</span>
+          </div>
+          <div class="tab-item">
+            <div class="icon">📊</div>
+            <span>Simular</span>
+          </div>
+          <div class="tab-item">
+            <div class="icon">💳</div>
+            <span>Dividas</span>
+          </div>
+          <div class="tab-item">
+            <div class="icon">📚</div>
+            <span>Aprender</span>
+          </div>
+          <div class="tab-item">
+            <div class="icon">👤</div>
+            <span>Perfil</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dashboard: New User (Empty) -->
+    <div class="screen-container">
+      <div class="screen-label">Dashboard: New User (Empty)</div>
+      <div class="phone-frame">
+        <div class="status-bar"></div>
+        <div class="screen-content">
+          <div class="dashboard-header">
+            <div class="header-top">
+              <div>
+                <div class="greeting">Bem-vindo,</div>
+                <div class="user-name">Usuario!</div>
+              </div>
+              <div class="avatar">👋</div>
+            </div>
+            <div class="health-score-card">
+              <div class="health-score-label">Sua saude financeira</div>
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 32px;">📊</span>
+                <div style="font-size: 14px; opacity: 0.9;">
+                  Faca sua primeira simulacao para calcularmos seu score
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="quick-actions">
+            <div class="quick-actions-title">Por onde comecar?</div>
+            <div class="quick-actions-grid">
+              <div class="quick-action-card">
+                <div class="quick-action-icon" style="background: rgba(46,125,50,0.1);">🔄</div>
+                <div class="quick-action-label">Refinanciar</div>
+              </div>
+              <div class="quick-action-card">
+                <div class="quick-action-icon" style="background: rgba(198,40,40,0.1);">💳</div>
+                <div class="quick-action-label">Sair da divida</div>
+              </div>
+              <div class="quick-action-card">
+                <div class="quick-action-icon" style="background: rgba(255,107,53,0.1);">🚗</div>
+                <div class="quick-action-label">Comprar</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="empty-state">
+            <div class="empty-state-icon">📋</div>
+            <div class="empty-state-title">Nenhuma simulacao ainda</div>
+            <div class="empty-state-text">Faca sua primeira simulacao e comece a entender suas financas</div>
+            <button class="btn btn-primary">Simular Agora</button>
+          </div>
+        </div>
+
+        <div class="tab-bar">
+          <div class="tab-item active">
+            <div class="icon">🏠</div>
+            <span>Inicio</span>
+          </div>
+          <div class="tab-item">
+            <div class="icon">📊</div>
+            <span>Simular</span>
+          </div>
+          <div class="tab-item">
+            <div class="icon">💳</div>
+            <span>Dividas</span>
+          </div>
+          <div class="tab-item">
+            <div class="icon">📚</div>
+            <span>Aprender</span>
+          </div>
+          <div class="tab-item">
+            <div class="icon">👤</div>
+            <span>Perfil</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Simulate Tab -->
+  <div class="section-title">Simulate Tab (Type Selector)</div>
+  <div class="screens-row">
+    <div class="screen-container">
+      <div class="screen-label">Simulation Type Selector</div>
+      <div class="phone-frame">
+        <div class="status-bar"></div>
+        <div class="screen-content">
+          <div class="simulate-header">
+            <div class="simulate-title">O que voce quer simular?</div>
+            <div class="simulate-subtitle">Escolha uma opcao para comecar</div>
+          </div>
+
+          <div class="simulate-grid">
+            <div class="simulate-card">
+              <div class="simulate-card-icon" style="background: linear-gradient(135deg, #E8F5E9, #C8E6C9);">🔄</div>
+              <div class="simulate-card-content">
+                <div class="simulate-card-title">Refinanciamento</div>
+                <div class="simulate-card-desc">Descubra se voce esta pagando caro demais e quanto pode economizar refinanciando</div>
+                <div class="simulate-card-action">Comecar →</div>
+              </div>
+            </div>
+
+            <div class="simulate-card">
+              <div class="simulate-card-icon" style="background: linear-gradient(135deg, #FFEBEE, #FFCDD2);">💳</div>
+              <div class="simulate-card-content">
+                <div class="simulate-card-title">Sair da Divida</div>
+                <div class="simulate-card-desc">Tem divida no cartao? Veja estrategias para quitar mais rapido</div>
+                <div class="simulate-card-action">Comecar →</div>
+              </div>
+            </div>
+
+            <div class="simulate-card">
+              <div class="simulate-card-icon" style="background: linear-gradient(135deg, #FFF3E0, #FFE0B2);">🚗</div>
+              <div class="simulate-card-content">
+                <div class="simulate-card-title">Comprar Algo</div>
+                <div class="simulate-card-desc">Quer comprar um carro, moto ou outro bem? Veja quanto vai custar</div>
+                <div class="simulate-card-action">Comecar →</div>
+              </div>
+            </div>
+
+            <div class="simulate-card" style="background: var(--neutral-100); box-shadow: none;">
+              <div class="simulate-card-icon" style="background: white;">📊</div>
+              <div class="simulate-card-content">
+                <div class="simulate-card-title" style="color: var(--neutral-700);">Simulacao Personalizada</div>
+                <div class="simulate-card-desc">Para usuarios avancados: configure todos os parametros manualmente</div>
+                <div class="simulate-card-action">Comecar →</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-bar">
+          <div class="tab-item">
+            <div class="icon">🏠</div>
+            <span>Inicio</span>
+          </div>
+          <div class="tab-item active">
+            <div class="icon">📊</div>
+            <span>Simular</span>
+          </div>
+          <div class="tab-item">
+            <div class="icon">💳</div>
+            <span>Dividas</span>
+          </div>
+          <div class="tab-item">
+            <div class="icon">📚</div>
+            <span>Aprender</span>
+          </div>
+          <div class="tab-item">
+            <div class="icon">👤</div>
+            <span>Perfil</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
